@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Ads Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="styles.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-50 font-sans">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-indigo-700 text-white fixed h-full shadow-lg">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold">Meta Ads Manager</h1>
+            </div>
+            <nav class="mt-6">
+                <ul>
+                    <li class="mb-2">
+                        <a href="#dashboard"
+                            class="flex items-center py-3 px-6 text-lg hover:bg-indigo-600 transition duration-200 nav-link"
+                            data-section="dashboard">
+                            <i class="fas fa-chart-line mr-3"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a href="#campanhas"
+                            class="flex items-center py-3 px-6 text-lg hover:bg-indigo-600 transition duration-200 nav-link"
+                            data-section="campanhas">
+                            <i class="fas fa-bullhorn mr-3"></i> Campanhas
+                        </a>
+                    </li>
+                    <li class="mb-2">
+                        <a href="#relatorios"
+                            class="flex items-center py-3 px-6 text-lg hover:bg-indigo-600 transition duration-200 nav-link"
+                            data-section="relatorios">
+                            <i class="fas fa-file-alt mr-3"></i> Gerador de Relatórios
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 ml-64 p-8 overflow-auto">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <h2 class="text-3xl font-bold mb-6 text-gray-800">Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- KPI Cards will be populated here -->
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-1 gap-6">
+                    <!-- Charts will be populated here -->
+                </div>
+            </section>
+
+            <!-- Campanhas Section -->
+            <section id="campanhas" class="section hidden">
+                <h2 class="text-3xl font-bold mb-6 text-gray-800">Campanhas</h2>
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <div class="overflow-x-auto">
+                        <table id="campanhasTable" class="min-w-full bg-white rounded-lg">
+                            <thead class="bg-gray-100 text-gray-700">
+                                <tr>
+                                    <th class="py-3 px-4 text-left">Campanha</th>
+                                    <th class="py-3 px-4 text-left">Status</th>
+                                    <th class="py-3 px-4 text-left">Início</th>
+                                    <th class="py-3 px-4 text-left">Fim</th>
+                                    <th class="py-3 px-4 text-right">Gasto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Campaigns data will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Relatórios Section -->
+            <section id="relatorios" class="section hidden">
+                <h2 class="text-3xl font-bold mb-6 text-gray-800">Gerador de Relatórios</h2>
+
+                <!-- Report Generator Form -->
+                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Selecione as métricas para o relatório:</h3>
+                    <form id="reportForm" class="space-y-4">
+                        <div class="mb-2">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="selectAll" class="h-5 w-5 text-indigo-600">
+                                <label for="selectAll" class="ml-2 text-gray-700 font-medium">Selecionar Todas</label>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="spend" name="metrics" value="spend"
+                                    class="h-5 w-5 text-indigo-600">
+                                <label for="spend" class="ml-2 text-gray-700">Gasto (Spend)</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="impressions" name="metrics" value="impressions"
+                                    class="h-5 w-5 text-indigo-600">
+                                <label for="impressions" class="ml-2 text-gray-700">Impressões</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="reach" name="metrics" value="reach"
+                                    class="h-5 w-5 text-indigo-600">
+                                <label for="reach" class="ml-2 text-gray-700">Alcance</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="clicks" name="metrics" value="clicks"
+                                    class="h-5 w-5 text-indigo-600">
+                                <label for="clicks" class="ml-2 text-gray-700">Cliques</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="ctr" name="metrics" value="ctr"
+                                    class="h-5 w-5 text-indigo-600">
+                                <label for="ctr" class="ml-2 text-gray-700">CTR</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="cpc" name="metrics" value="cpc"
+                                    class="h-5 w-5 text-indigo-600">
+                                <label for="cpc" class="ml-2 text-gray-700">CPC</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="campaign_name" name="metrics" value="campaign_name"
+                                    class="h-5 w-5 text-indigo-600" checked>
+                                <label for="campaign_name" class="ml-2 text-gray-700">Nome da Campanha</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="date_start" name="metrics" value="date_start"
+                                    class="h-5 w-5 text-indigo-600">
+                                <label for="date_start" class="ml-2 text-gray-700">Data Início</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="checkbox" id="date_stop" name="metrics" value="date_stop"
+                                    class="h-5 w-5 text-indigo-600">
+                                <label for="date_stop" class="ml-2 text-gray-700">Data Fim</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Report Results (Initially Hidden) -->
+                <div id="reportResults" class="hidden space-y-8">
+                    <!-- KPI Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- KPI cards will be generated dynamically based on selected metrics -->
+                    </div>
+                    <div id="campanhasTable" class="hide-on-pdf bg-white rounded-lg shadow-md p-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-semibold text-gray-700">Resultados Detalhados</h3>
+                            <button id="exportPdfBtn"
+                                class="hide-on-pdf bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition duration-200 flex items-center">
+                                <i class="fas fa-file-pdf mr-2"></i> Exportar PDF
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table id="resultsTable" class="min-w-full bg-white">
+                                <thead class="bg-gray-100 text-gray-700">
+                                    <tr>
+                                        <!-- Table header columns will be dynamically generated based on selected metrics -->
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Results will be populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Charts -->
+                    <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
+                        <!-- Charts will be generated dynamically based on selected metrics -->
+                    </div>
+
+                    <!-- Data Table -->
+
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal de Confirmação -->
+    <div id="pdfModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white p-6 rounded-lg shadow-md max-w-md w-full">
+            <h2 class="text-xl font-semibold mb-4 text-gray-800">Deseja incluir uma análise por IA no relatório?</h2>
+            <div class="flex justify-end gap-4">
+                <button id="cancelPdfBtn"
+                    class="bg-gray-300 text-gray-800 py-2 px-4 rounded hover:bg-gray-400">Não</button>
+                <button id="confirmPdfBtn"
+                    class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">Sim</button>
+            </div>
+        </div>
+        <div id="modalSpinner" class="mt-4 flex justify-center hidden">
+            <svg class="animate-spin h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+            </svg>
+        </div>
+    </div>
+
+
+    <script src="script.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</body>
+
+</html>
