@@ -5,160 +5,244 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Meta Ads Dashboard</title>
+    <meta name="description" content="Dashboard para análise e gerenciamento de campanhas Meta Ads">
+    <meta name="theme-color" content="#1877f2" id="theme-color">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="styles.css" rel="stylesheet">
+    <link rel="icon" href="https://static.xx.fbcdn.net/rsrc.php/v3/y4/r/XN1XBSBjlGJ.png" type="image/png">
 </head>
 
-<body class="bg-gray-50 font-sans">
+<body class="bg-gray-50 font-sans" aria-live="polite">
+    <!-- Accessibility Skip Link -->
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 z-50 bg-white p-4 text-blue-primary">Pular para o conteúdo principal</a>
+
+    <!-- Mobile Menu Toggle -->
+    <button id="mobileMenuToggle" class="mobile-menu-toggle" aria-label="Abrir menu de navegação">
+        <i class="fas fa-bars" aria-hidden="true"></i>
+    </button>
+
+    <!-- Dark Mode Toggle -->
+    <button id="themeToggle" class="theme-toggle" aria-label="Alternar modo escuro">
+        <i class="fas fa-moon" aria-hidden="true"></i>
+    </button>
+
     <div class="flex h-screen">
         <!-- Sidebar -->
-        <aside class="w-64 bg-indigo-700 text-white fixed h-full shadow-lg">
+        <aside id="sidebar" class="bg-white text-gray-900" role="navigation" aria-label="Menu principal">
             <div class="p-6">
-                <h1 class="text-2xl font-bold">Meta Ads Manager</h1>
+                <div class="flex items-center">
+                    <img src="./assets/img/logo/logo-netsar-removebg-preview.png" alt="Netsar Logo" class="h-12 mr-5">
+                    <h1 class="text-xl font-bold">Meta Ads Manager</h1>
+                </div>
             </div>
-            <nav class="mt-6">
+            <nav>
                 <ul>
                     <li class="mb-2">
-                        <a href="#dashboard"
-                            class="flex items-center py-3 px-6 text-lg hover:bg-indigo-600 transition duration-200 nav-link"
-                            data-section="dashboard">
-                            <i class="fas fa-chart-line mr-3"></i> Dashboard
+                        <a href="#dashboard" class="nav-link" data-section="dashboard" aria-current="page">
+                            <i class="fas fa-chart-line" aria-hidden="true"></i>
+                            <span>Dashboard</span>
                         </a>
                     </li>
                     <li class="mb-2">
-                        <a href="#campanhas"
-                            class="flex items-center py-3 px-6 text-lg hover:bg-indigo-600 transition duration-200 nav-link"
-                            data-section="campanhas">
-                            <i class="fas fa-bullhorn mr-3"></i> Campanhas
+                        <a href="#campanhas" class="nav-link" data-section="campanhas">
+                            <i class="fas fa-bullhorn" aria-hidden="true"></i>
+                            <span>Campanhas</span>
                         </a>
                     </li>
                     <li class="mb-2">
-                        <a href="#relatorios"
-                            class="flex items-center py-3 px-6 text-lg hover:bg-indigo-600 transition duration-200 nav-link"
-                            data-section="relatorios">
-                            <i class="fas fa-file-alt mr-3"></i> Gerador de Relatórios
+                        <a href="#relatorios" class="nav-link" data-section="relatorios">
+                            <i class="fas fa-file-alt" aria-hidden="true"></i>
+                            <span>Gerador de Relatórios</span>
                         </a>
                     </li>
                 </ul>
             </nav>
+            <div class="mt-auto p-4 border-t border-gray-200 text-xs text-gray-500 hidden md:block">
+                <p>© 2025 NETSAR - Meta Ads Dashboard</p>
+                <p class="mt-1">Versão 1.0.0</p>
+            </div>
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-1 ml-64 p-8 overflow-auto">
+        <main id="main-content" class="ml-64 p-8 overflow-auto" role="main">
             <!-- Dashboard Section -->
-            <section id="dashboard" class="section active">
-                <h2 class="text-3xl font-bold mb-6 text-gray-800">Dashboard</h2>
+            <section id="dashboard" class="section active" aria-labelledby="dashboard-heading">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="dashboard-heading" class="text-3xl font-bold text-gray-800">Dashboard</h2>
+                    <div class="flex items-center">
+                        <button class="refresh-btn flex items-center bg-white text-gray-700 px-3 py-2 rounded-md border border-gray-200 hover:bg-gray-50" aria-label="Atualizar dashboard">
+                            <i class="fas fa-sync-alt mr-2 text-sm" aria-hidden="true"></i>
+                            <span>Atualizar</span>
+                        </button>
+                    </div>
+                </div>
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <!-- KPI Cards will be populated here -->
                 </div>
+                
                 <div class="grid grid-cols-1 lg:grid-cols-1 gap-6">
                     <!-- Charts will be populated here -->
                 </div>
             </section>
 
             <!-- Campanhas Section -->
-            <section id="campanhas" class="section hidden">
-                <h2 class="text-3xl font-bold mb-6 text-gray-800">Campanhas</h2>
-                <div class="bg-white rounded-lg shadow-md p-6">
-                    <div class="overflow-x-auto">
-                        <table id="campanhasTable" class="min-w-full bg-white rounded-lg">
-                            <thead class="bg-gray-100 text-gray-700">
-                                <tr>
-                                    <th class="py-3 px-4 text-left">Campanha</th>
-                                    <th class="py-3 px-4 text-left">Status</th>
-                                    <th class="py-3 px-4 text-left">Início</th>
-                                    <th class="py-3 px-4 text-left">Fim</th>
-                                    <th class="py-3 px-4 text-right">Gasto</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Campaigns data will be populated here -->
-                            </tbody>
-                        </table>
+            <section id="campanhas" class="section hidden" aria-labelledby="campanhas-heading">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="campanhas-heading" class="text-3xl font-bold text-gray-800">Campanhas</h2>
+                    <div class="flex items-center space-x-3">
+                        <div class="relative w-full">
+                            <input type="text" placeholder="Buscar campanhas..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-light" aria-label="Buscar campanhas">
+                            <i class="fas fa-search absolute left-3 top-3 text-gray-400" aria-hidden="true"></i>
+                        </div>
+                        <button class="refresh-btn flex items-center bg-white text-gray-700 px-3 py-2 rounded-md border border-gray-200 hover:bg-gray-50" aria-label="Atualizar lista de campanhas">
+                            <i class="fas fa-sync-alt mr-2 text-sm" aria-hidden="true"></i>
+                            <span>Atualizar</span>
+                        </button>
                     </div>
+                </div>
+                
+                <!-- Tabs for different campaign views -->
+                <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
+                    <div class="border-b border-gray-200">
+                        <nav class="flex" role="tablist" aria-label="Visualização de campanhas">
+                            <button id="listTabBtn" class="campaign-tab-btn active px-5 py-3 font-medium border-b-2 border-indigo-500 text-indigo-600" role="tab" aria-selected="true" aria-controls="campaignListView">
+                                <i class="fas fa-list-ul mr-2" aria-hidden="true"></i>Lista
+                            </button>
+                            <button id="rankingTabBtn" class="campaign-tab-btn px-5 py-3 font-medium text-gray-500 hover:text-gray-700" role="tab" aria-selected="false" aria-controls="campaignRankingView">
+                                <i class="fas fa-trophy mr-2" aria-hidden="true"></i>Ranking
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+                
+                <!-- List View (default) -->
+                <div id="campaignListView" class="campaign-view active" role="tabpanel" aria-labelledby="listTabBtn">
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-700">Lista de Campanhas</h3>
+                            <div class="flex space-x-2">
+                                <button class="px-3 py-1 bg-white border border-gray-200 rounded text-gray-600 hover:bg-gray-50" aria-label="Filtrar campanhas">
+                                    <i class="fas fa-filter mr-1" aria-hidden="true"></i> Filtrar
+                                </button>
+                                <button class="px-3 py-1 bg-white border border-gray-200 rounded text-gray-600 hover:bg-gray-50" aria-label="Ordenar campanhas">
+                                    <i class="fas fa-sort mr-1" aria-hidden="true"></i> Ordenar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table id="campanhasTable" class="min-w-full bg-white">
+                                <caption class="sr-only">Lista de campanhas com nome, status, data de início, data de fim e gasto</caption>
+                                <thead class="bg-gray-100 text-gray-700">
+                                    <tr>
+                                        <th scope="col" class="py-3 px-4 text-left">Campanha</th>
+                                        <th scope="col" class="py-3 px-4 text-left">Status</th>
+                                        <th scope="col" class="py-3 px-4 text-left">Início</th>
+                                        <th scope="col" class="py-3 px-4 text-left">Fim</th>
+                                        <th scope="col" class="py-3 px-4 text-right">Gasto</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Campaigns data will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Ranking View (initially hidden) -->
+                <div id="campaignRankingView" class="campaign-view hidden" role="tabpanel" aria-labelledby="rankingTabBtn">
+                    <!-- This will be populated by CampaignRankingView -->
                 </div>
             </section>
 
             <!-- Relatórios Section -->
-            <section id="relatorios" class="section hidden">
-                <h2 class="text-3xl font-bold mb-6 text-gray-800">Gerador de Relatórios</h2>
+            <section id="relatorios" class="section hidden" aria-labelledby="relatorios-heading">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 id="relatorios-heading" class="text-3xl font-bold text-gray-800">Gerador de Relatórios</h2>
+                    <div class="flex items-center space-x-3">
+                        <button id="exportPdfBtn" class="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition duration-200 flex items-center" aria-label="Exportar resultados como PDF">
+                            <i class="fas fa-file-pdf mr-2" aria-hidden="true"></i> Exportar PDF
+                        </button>
+                        <button class="refresh-btn flex items-center bg-white text-gray-700 px-3 py-2 rounded-md border border-gray-200 hover:bg-gray-50" aria-label="Atualizar gerador de relatórios">
+                            <i class="fas fa-sync-alt mr-2 text-sm" aria-hidden="true"></i>
+                            <span>Atualizar</span>
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Report Generator Form -->
-                <div class="bg-white rounded-lg shadow-md p-6 mb-8">
-                    <h3 class="text-xl font-semibold mb-4 text-gray-700">Selecione as métricas para o relatório:</h3>
-                    <form id="reportForm" class="space-y-4">
-                        <div class="mb-2">
-                            <div class="flex items-center">
-                                <input type="checkbox" id="selectAll" class="h-5 w-5 text-indigo-600">
-                                <label for="selectAll" class="ml-2 text-gray-700 font-medium">Selecionar Todas</label>
-                            </div>
+                <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-gray-700">Selecione as métricas para o relatório</h3>
+                        <div class="text-sm text-gray-500">
+                            Selecione as métricas e os dados serão atualizados automaticamente
                         </div>
-                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            <div class="flex items-center">
-                                <input type="checkbox" id="spend" name="metrics" value="spend"
-                                    class="h-5 w-5 text-indigo-600">
-                                <label for="spend" class="ml-2 text-gray-700">Gasto (Spend)</label>
+                    </div>
+                    <div class="p-6">
+                        <form id="reportForm" class="space-y-4">
+                            <div class="mb-4">
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="selectAll" class="h-5 w-5">
+                                    <label for="selectAll" class="ml-2 font-medium">Selecionar Todas</label>
+                                </div>
                             </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="impressions" name="metrics" value="impressions"
-                                    class="h-5 w-5 text-indigo-600">
-                                <label for="impressions" class="ml-2 text-gray-700">Impressões</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="reach" name="metrics" value="reach"
-                                    class="h-5 w-5 text-indigo-600">
-                                <label for="reach" class="ml-2 text-gray-700">Alcance</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="clicks" name="metrics" value="clicks"
-                                    class="h-5 w-5 text-indigo-600">
-                                <label for="clicks" class="ml-2 text-gray-700">Cliques</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="ctr" name="metrics" value="ctr"
-                                    class="h-5 w-5 text-indigo-600">
-                                <label for="ctr" class="ml-2 text-gray-700">CTR</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="cpc" name="metrics" value="cpc"
-                                    class="h-5 w-5 text-indigo-600">
-                                <label for="cpc" class="ml-2 text-gray-700">CPC</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="campaign_name" name="metrics" value="campaign_name"
-                                    class="h-5 w-5 text-indigo-600" checked>
-                                <label for="campaign_name" class="ml-2 text-gray-700">Nome da Campanha</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="date_start" name="metrics" value="date_start"
-                                    class="h-5 w-5 text-indigo-600">
-                                <label for="date_start" class="ml-2 text-gray-700">Data Início</label>
-                            </div>
-                            <div class="flex items-center">
-                                <input type="checkbox" id="date_stop" name="metrics" value="date_stop"
-                                    class="h-5 w-5 text-indigo-600">
-                                <label for="date_stop" class="ml-2 text-gray-700">Data Fim</label>
-                            </div>
-                        </div>
-                    </form>
+                            <fieldset class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                <legend class="sr-only">Métricas disponíveis</legend>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="spend" name="metrics" value="spend" class="h-5 w-5">
+                                    <label for="spend" class="ml-2">Gasto (Spend)</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="impressions" name="metrics" value="impressions" class="h-5 w-5">
+                                    <label for="impressions" class="ml-2">Impressões</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="reach" name="metrics" value="reach" class="h-5 w-5">
+                                    <label for="reach" class="ml-2">Alcance</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="clicks" name="metrics" value="clicks" class="h-5 w-5">
+                                    <label for="clicks" class="ml-2">Cliques</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="ctr" name="metrics" value="ctr" class="h-5 w-5">
+                                    <label for="ctr" class="ml-2">CTR</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="cpc" name="metrics" value="cpc" class="h-5 w-5">
+                                    <label for="cpc" class="ml-2">CPC</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="campaign_name" name="metrics" value="campaign_name" class="h-5 w-5" checked>
+                                    <label for="campaign_name" class="ml-2">Nome da Campanha</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="date_start" name="metrics" value="date_start" class="h-5 w-5">
+                                    <label for="date_start" class="ml-2">Data Início</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input type="checkbox" id="date_stop" name="metrics" value="date_stop" class="h-5 w-5">
+                                    <label for="date_stop" class="ml-2">Data Fim</label>
+                                </div>
+                            </fieldset>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- Report Results (Initially Hidden) -->
-                <div id="reportResults" class="hidden space-y-8">
+                <div id="reportResults" class="hidden space-y-8 mt-6" aria-live="polite">
                     <!-- KPI Cards -->
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         <!-- KPI cards will be generated dynamically based on selected metrics -->
                     </div>
-                    <div id="campanhasTable" class="hide-on-pdf bg-white rounded-lg shadow-md p-6">
-                        <div class="flex justify-between items-center mb-4">
-                            <h3 class="text-xl font-semibold text-gray-700">Resultados Detalhados</h3>
-                            <button id="exportPdfBtn"
-                                class="hide-on-pdf bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition duration-200 flex items-center">
-                                <i class="fas fa-file-pdf mr-2"></i> Exportar PDF
-                            </button>
+                    <div id="campanhasTable" class="hide-on-pdf bg-white rounded-lg shadow-md overflow-hidden">
+                        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                            <h3 class="text-lg font-semibold text-gray-700">Resultados Detalhados</h3>
                         </div>
-                        <div class="overflow-x-auto">
+                        <div class="overflow-x-auto p-4">
                             <table id="resultsTable" class="min-w-full bg-white">
+                                <caption class="sr-only">Resultados detalhados do relatório</caption>
                                 <thead class="bg-gray-100 text-gray-700">
                                     <tr>
                                         <!-- Table header columns will be dynamically generated based on selected metrics -->
@@ -174,40 +258,43 @@
                     <div class="grid grid-cols-1 md:grid-cols-1 gap-6">
                         <!-- Charts will be generated dynamically based on selected metrics -->
                     </div>
-
-                    <!-- Data Table -->
-
                 </div>
             </section>
         </main>
     </div>
 
     <!-- Modal de Confirmação -->
-    <div id="pdfModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div id="pdfModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" role="dialog" aria-labelledby="pdfModalTitle" aria-modal="true">
         <div class="bg-white p-6 rounded-lg shadow-md max-w-md w-full">
-            <h2 class="text-xl font-semibold mb-4 text-gray-800">Deseja incluir uma análise por IA no relatório?</h2>
+            <h2 id="pdfModalTitle" class="text-xl font-semibold mb-4 text-gray-800">Deseja incluir uma análise por IA no relatório?</h2>
             <div class="flex justify-end gap-4">
-                <button id="cancelPdfBtn"
-                    class="bg-gray-300 text-gray-800 py-2 px-4 rounded hover:bg-gray-400">Não</button>
-                <button id="confirmPdfBtn"
-                    class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">Sim</button>
+                <button id="cancelPdfBtn" class="bg-gray-300 text-gray-800 py-2 px-4 rounded hover:bg-gray-400">Não</button>
+                <button id="confirmPdfBtn" class="bg-indigo-600 text-white py-2 px-4 rounded hover:bg-indigo-700">Sim</button>
             </div>
         </div>
         <div id="modalSpinner" class="mt-4 flex justify-center hidden">
-            <svg class="animate-spin h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none"
-                viewBox="0 0 24 24">
+            <svg class="animate-spin h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" aria-hidden="true">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
             </svg>
         </div>
     </div>
 
+    <!-- Overlay do PDF (Indicador de geração) -->
+    <div id="pdfGeneratingOverlay" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden" role="alert" aria-live="assertive">
+        <div class="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-primary mx-auto" aria-hidden="true"></div>
+            <h3 class="text-xl font-semibold mt-4 mb-2">Gerando PDF</h3>
+            <p class="text-gray-600">Seu relatório está sendo gerado. Por favor, aguarde...</p>
+        </div>
+    </div>
 
-    <script src="script.js"></script>
+    <!-- Scripts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script type="module" src="js/app.js"></script>
 </body>
 
 </html>
