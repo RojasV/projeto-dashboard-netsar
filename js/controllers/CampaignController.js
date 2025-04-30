@@ -175,27 +175,27 @@ export class CampaignController {
     setRefreshButtonLoading(isLoading) {
         if (!this.refreshBtn) return;
         
-        const icon = this.refreshBtn.querySelector('i');
-        const text = this.refreshBtn.querySelector('span');
-        
         if (isLoading) {
+            // Armazena o conteúdo original para restaurar mais tarde
+            if (!this.refreshBtn.hasAttribute('data-original-html')) {
+                this.refreshBtn.setAttribute('data-original-html', this.refreshBtn.innerHTML);
+            }
+            
+            // Exibe apenas o ícone girando, sem texto
+            this.refreshBtn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i>';
             this.refreshBtn.disabled = true;
-            this.refreshBtn.classList.add('opacity-70', 'cursor-not-allowed');
-            if (icon) {
-                icon.classList.add('fa-spin');
-            }
-            if (text) {
-                text.textContent = 'Atualizando...';
-            }
+            this.refreshBtn.classList.add('opacity-70');
         } else {
+            // Restaura o conteúdo original do botão
+            if (this.refreshBtn.hasAttribute('data-original-html')) {
+                this.refreshBtn.innerHTML = this.refreshBtn.getAttribute('data-original-html');
+                this.refreshBtn.removeAttribute('data-original-html');
+            } else {
+                // Fallback caso não tenha o atributo data-original-html
+                this.refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> <span>Atualizar</span>';
+            }
             this.refreshBtn.disabled = false;
-            this.refreshBtn.classList.remove('opacity-70', 'cursor-not-allowed');
-            if (icon) {
-                icon.classList.remove('fa-spin');
-            }
-            if (text) {
-                text.textContent = 'Atualizar';
-            }
+            this.refreshBtn.classList.remove('opacity-70');
         }
     }
     

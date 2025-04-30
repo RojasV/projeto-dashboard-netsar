@@ -12,9 +12,10 @@ export class CampaignRankingView {
         this.container = null;
         this.data = [];
         this.colorPalette = generateColorPalette(10);
-        this.currentMetric = 'ctr'; // Default sorting metric
+        this.currentMetric = 'roas'; // Default sorting metric
         this.sortDirection = 'desc'; // Default sort direction
         this.charts = {};
+        this.dateFilter = 'last7days'; // Default date filter
     }
     
     /**
@@ -24,8 +25,8 @@ export class CampaignRankingView {
     init(container) {
         this.container = container;
         
-        // Create metric selector
-        this.createMetricSelector();
+        // Create filter controls
+        this.createFilterControls();
         
         // Initialize tooltips and interactivity
         this.setupTooltips();
@@ -40,76 +41,85 @@ export class CampaignRankingView {
     }
     
     /**
-     * Create metric selector for different ranking criteria
+     * Create filter controls for the ranking
      */
-    createMetricSelector() {
-        const selectorContainer = document.createElement('div');
-        selectorContainer.className = 'flex flex-wrap justify-center gap-3 mb-6';
-        selectorContainer.innerHTML = `
-            <button data-metric="ctr" class="metric-btn active">
-                <i class="fas fa-percentage mr-2"></i>CTR
-            </button>
-            <button data-metric="clicks" class="metric-btn">
-                <i class="fas fa-mouse-pointer mr-2"></i>Cliques
-            </button>
-            <button data-metric="spend" class="metric-btn">
-                <i class="fas fa-hand-holding-usd mr-2"></i>Gasto
-            </button>
-            <button data-metric="impressions" class="metric-btn">
-                <i class="fas fa-eye mr-2"></i>Impressões
-            </button>
+    createFilterControls() {
+        const controlsContainer = document.createElement('div');
+        controlsContainer.className = 'flex justify-between items-center mb-6';
+        controlsContainer.innerHTML = `
+            <div class="flex gap-4">
+                <select id="dateFilter" class="px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                    <option value="last7days">Últimos 7 dias</option>
+                    <option value="last30days">Últimos 30 dias</option>
+                    <option value="custom">Personalizado</option>
+                </select>
+                <select id="metricFilter" class="px-4 py-2 border border-gray-200 rounded-lg bg-white">
+                    <option value="roas">Ordenar por ROAS</option>
+                    <option value="cpa">Ordenar por CPA</option>
+                    <option value="spend">Ordenar por Gasto</option>
+                    <option value="conversions">Ordenar por Conversões</option>
+                </select>
+            </div>
         `;
         
-        this.container.appendChild(selectorContainer);
+        this.container.appendChild(controlsContainer);
         
-        // Add click event to metric buttons
-        const metricButtons = selectorContainer.querySelectorAll('.metric-btn');
-        metricButtons.forEach(button => {
-            // Style the buttons
-            button.classList.add('px-4', 'py-2', 'rounded-full', 'bg-white', 'text-gray-700', 'font-medium', 'shadow-sm', 'hover:shadow-md', 'transition', 'border', 'border-gray-200');
-            
-            button.addEventListener('click', (e) => {
-                // Update active state
-                metricButtons.forEach(btn => {
-                    btn.classList.remove('active', 'bg-blue-light', 'text-blue-primary');
-                    btn.classList.add('bg-white', 'text-gray-700');
-                });
-                
-                button.classList.add('active', 'bg-blue-light', 'text-blue-primary');
-                button.classList.remove('bg-white', 'text-gray-700');
-                
-                // Update current metric and resort
-                this.currentMetric = button.getAttribute('data-metric');
-                this.sortData();
-                this.renderRanking();
-            });
+        // Add event listeners to filters
+        const dateFilter = controlsContainer.querySelector('#dateFilter');
+        const metricFilter = controlsContainer.querySelector('#metricFilter');
+        
+        dateFilter.addEventListener('change', (e) => {
+            this.dateFilter = e.target.value;
+            // In a real app, this would trigger a data refresh
+            // For now, just re-render with current data
+            this.renderRanking();
         });
         
-        // Set initial active button
-        const initialActive = selectorContainer.querySelector(`[data-metric="${this.currentMetric}"]`);
-        if (initialActive) {
-            initialActive.classList.add('active', 'bg-blue-light', 'text-blue-primary');
-            initialActive.classList.remove('bg-white', 'text-gray-700');
-        }
+        metricFilter.addEventListener('change', (e) => {
+            this.currentMetric = e.target.value;
+            this.sortData();
+            this.renderRanking();
+        });
     }
     
     /**
      * Setup tooltips and interactivity
      */
     setupTooltips() {
-        // Tooltip functionality will be initialized during render
         // Using event delegation
         document.addEventListener('mouseover', (e) => {
-            if (e.target.classList.contains('campaign-card') || e.target.closest('.campaign-card')) {
-                const card = e.target.classList.contains('campaign-card') ? e.target : e.target.closest('.campaign-card');
-                card.classList.add('transform', 'scale-105', 'z-10');
+            if (e.target.closest('#campaign-grid > div')) {
+                const card = e.target.closest('#campaign-grid > div');
+                card.classList.add('shadow-lg');
             }
         });
         
         document.addEventListener('mouseout', (e) => {
-            if (e.target.classList.contains('campaign-card') || e.target.closest('.campaign-card')) {
-                const card = e.target.classList.contains('campaign-card') ? e.target : e.target.closest('.campaign-card');
-                card.classList.remove('transform', 'scale-105', 'z-10');
+            if (e.target.closest('#campaign-grid > div')) {
+                const card = e.target.closest('#campaign-grid > div');
+                if (!card.classList.contains('modal-open')) {
+                    card.classList.remove('shadow-lg');
+                }
+            }
+        });
+        
+        // Handle campaign card clicks
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#campaign-grid > div')) {
+                const card = e.target.closest('#campaign-grid > div');
+                const campaignId = card.getAttribute('data-id');
+                this.openCampaignDetails(campaignId);
+            }
+            
+            // Close modal if click on close button - replace :has selector
+            const closeButton = e.target.closest('#campaign-modal button');
+            if (closeButton && closeButton.querySelector('.fa-xmark')) {
+                this.closeCampaignModal();
+            }
+            
+            // Close modal if click outside modal content
+            if (e.target.id === 'campaign-modal') {
+                this.closeCampaignModal();
             }
         });
     }
@@ -119,13 +129,28 @@ export class CampaignRankingView {
      */
     sortData() {
         this.data.sort((a, b) => {
-            let valueA = parseFloat(a[this.currentMetric]) || 0;
-            let valueB = parseFloat(b[this.currentMetric]) || 0;
+            let valueA, valueB;
             
-            // For CTR, convert from string percentage format
-            if (this.currentMetric === 'ctr') {
-                valueA = parseFloat(a[this.currentMetric]) || 0;
-                valueB = parseFloat(b[this.currentMetric]) || 0;
+            switch(this.currentMetric) {
+                case 'roas':
+                    valueA = parseFloat(a.roas || 0);
+                    valueB = parseFloat(b.roas || 0);
+                    break;
+                case 'cpa':
+                    valueA = parseFloat(a.cpa || 0);
+                    valueB = parseFloat(b.cpa || 0);
+                    break;
+                case 'spend':
+                    valueA = parseFloat(a.spend || 0);
+                    valueB = parseFloat(b.spend || 0);
+                    break;
+                case 'conversions':
+                    valueA = parseInt(a.conversions || 0);
+                    valueB = parseInt(b.conversions || 0);
+                    break;
+                default:
+                    valueA = parseFloat(a.roas || 0);
+                    valueB = parseFloat(b.roas || 0);
             }
             
             return this.sortDirection === 'desc' ? valueB - valueA : valueA - valueB;
@@ -142,297 +167,213 @@ export class CampaignRankingView {
     }
     
     /**
-     * Create comparison chart for top 5 campaigns
-     */
-    createComparisonChart() {
-        // Create chart container
-        const chartContainer = document.createElement('div');
-        chartContainer.className = 'bg-white rounded-lg shadow-md p-6 mt-6 chart-container';
-        chartContainer.innerHTML = `
-            <h3 class="text-lg font-semibold mb-4 text-gray-700">Comparativo das Top 5 Campanhas</h3>
-            <canvas id="campaignComparisonChart"></canvas>
-        `;
-        
-        this.container.appendChild(chartContainer);
-        
-        // Get top 5 campaigns
-        const top5 = this.data.slice(0, 5);
-        
-        // Prepare data for chart
-        const labels = top5.map(campaign => truncateText(campaign.campaign_name, 15));
-        const ctrData = top5.map(campaign => parseFloat(campaign.ctr) || 0);
-        const clicksData = top5.map(campaign => parseInt(campaign.clicks) || 0);
-        const spendData = top5.map(campaign => parseFloat(campaign.spend) || 0);
-        
-        // Destroy existing chart if exists
-        if (this.charts.comparison) {
-            this.charts.comparison.destroy();
-        }
-        
-        // Determine if we're in dark mode
-        const isDarkMode = document.body.classList.contains('dark-mode');
-        
-        // Define colors based on theme
-        const colors = {
-            ctr: {
-                bg: isDarkMode ? 'rgba(65, 147, 255, 0.3)' : 'rgba(79, 70, 229, 0.2)',
-                border: isDarkMode ? 'rgba(65, 147, 255, 1)' : 'rgba(79, 70, 229, 1)',
-                point: isDarkMode ? 'rgba(65, 147, 255, 1)' : 'rgba(79, 70, 229, 1)'
-            },
-            clicks: {
-                bg: isDarkMode ? 'rgba(76, 217, 100, 0.3)' : 'rgba(16, 185, 129, 0.2)',
-                border: isDarkMode ? 'rgba(76, 217, 100, 1)' : 'rgba(16, 185, 129, 1)',
-                point: isDarkMode ? 'rgba(76, 217, 100, 1)' : 'rgba(16, 185, 129, 1)'
-            },
-            spend: {
-                bg: isDarkMode ? 'rgba(255, 204, 0, 0.3)' : 'rgba(245, 158, 11, 0.2)',
-                border: isDarkMode ? 'rgba(255, 204, 0, 1)' : 'rgba(245, 158, 11, 1)',
-                point: isDarkMode ? 'rgba(255, 204, 0, 1)' : 'rgba(245, 158, 11, 1)'
-            }
-        };
-        
-        // Create chart
-        const ctx = document.getElementById('campaignComparisonChart').getContext('2d');
-        this.charts.comparison = new Chart(ctx, {
-            type: 'radar',
-            data: {
-                labels: labels,
-                datasets: [
-                    {
-                        label: 'CTR (×1000)',
-                        data: ctrData.map(val => val * 1000), // Scale for better visualization
-                        backgroundColor: colors.ctr.bg,
-                        borderColor: colors.ctr.border,
-                        pointBackgroundColor: colors.ctr.point,
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: colors.ctr.border,
-                        borderWidth: 2
-                    },
-                    {
-                        label: 'Cliques (÷100)',
-                        data: clicksData.map(val => val / 100), // Scale for better visualization
-                        backgroundColor: colors.clicks.bg,
-                        borderColor: colors.clicks.border,
-                        pointBackgroundColor: colors.clicks.point,
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: colors.clicks.border,
-                        borderWidth: 2
-                    },
-                    {
-                        label: 'Gasto (÷100)',
-                        data: spendData.map(val => val / 100), // Scale for better visualization
-                        backgroundColor: colors.spend.bg,
-                        borderColor: colors.spend.border,
-                        pointBackgroundColor: colors.spend.point,
-                        pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: colors.spend.border,
-                        borderWidth: 2
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                elements: {
-                    line: {
-                        tension: 0.4 // Smoothes the line
-                    }
-                },
-                scales: {
-                    r: {
-                        beginAtZero: true,
-                        grid: {
-                            color: isDarkMode 
-                                ? 'rgba(255, 255, 255, 0.15)' 
-                                : 'rgba(0, 0, 0, 0.1)'
-                        },
-                        angleLines: {
-                            color: isDarkMode 
-                                ? 'rgba(255, 255, 255, 0.25)' 
-                                : 'rgba(0, 0, 0, 0.15)'
-                        },
-                        pointLabels: {
-                            color: isDarkMode 
-                                ? 'rgba(255, 255, 255, 0.9)' 
-                                : 'rgba(0, 0, 0, 0.7)',
-                            font: {
-                                weight: isDarkMode ? 'bold' : 'normal'
-                            }
-                        },
-                        ticks: {
-                            color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
-                            backdropColor: isDarkMode ? 'rgba(30, 30, 30, 0.8)' : 'rgba(255, 255, 255, 0.8)',
-                            z: 1
-                        }
-                    }
-                },
-                plugins: {
-                    legend: {
-                        labels: {
-                            color: isDarkMode ? '#ffffff' : '#303338',
-                            font: {
-                                weight: isDarkMode ? 'bold' : 'normal'
-                            }
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-                        titleColor: isDarkMode ? '#ffffff' : '#303338',
-                        bodyColor: isDarkMode ? '#cccccc' : '#606770',
-                        borderColor: isDarkMode ? 'rgba(65, 147, 255, 0.5)' : 'rgba(79, 70, 229, 0.5)',
-                        borderWidth: 1,
-                        callbacks: {
-                            label: function(context) {
-                                let label = context.dataset.label || '';
-                                if (label.includes('CTR')) {
-                                    return `CTR: ${(context.raw / 1000).toFixed(2)}%`;
-                                } else if (label.includes('Cliques')) {
-                                    return `Cliques: ${(context.raw * 100).toLocaleString()}`;
-                                } else if (label.includes('Gasto')) {
-                                    return `Gasto: R$ ${(context.raw * 100).toFixed(2)}`;
-                                }
-                                return label;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-    
-    /**
      * Render the ranking cards
      */
     renderRanking() {
         // Clear existing ranking
-        const existingRanking = this.container.querySelector('.ranking-container');
+        const existingRanking = this.container.querySelector('#campaign-grid');
         if (existingRanking) {
             existingRanking.remove();
         }
         
-        // Create ranking container
-        const rankingContainer = document.createElement('div');
-        rankingContainer.className = 'ranking-container';
+        // Create the campaign grid
+        const campaignGrid = document.createElement('div');
+        campaignGrid.id = 'campaign-grid';
+        campaignGrid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
         
-        // Create grid for cards
-        const cardsGrid = document.createElement('div');
-        cardsGrid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
-        
-        // Add cards for each campaign
+        // Add campaign cards
         this.data.forEach((campaign, index) => {
-            const position = index + 1;
-            let positionClass = '';
-            let medalIcon = '';
+            // Determine medal position elements
+            let medalPosition = '';
+            let medalClass = '';
             
-            // Styling for top 3 positions
-            if (position === 1) {
-                positionClass = 'bg-yellow-100 border-yellow-500';
-                medalIcon = '<i class="fas fa-medal text-yellow-500 text-xl mr-2"></i>';
-            } else if (position === 2) {
-                positionClass = 'bg-gray-100 border-gray-500';
-                medalIcon = '<i class="fas fa-medal text-gray-500 text-xl mr-2"></i>';
-            } else if (position === 3) {
-                positionClass = 'bg-amber-100 border-amber-600';
-                medalIcon = '<i class="fas fa-medal text-amber-600 text-xl mr-2"></i>';
+            if (index === 0) {
+                medalPosition = '🥇';
+                medalClass = 'bg-yellow-400';
+            } else if (index === 1) {
+                medalPosition = '🥈';
+                medalClass = 'bg-gray-300';
+            } else if (index === 2) {
+                medalPosition = '🥉';
+                medalClass = 'bg-orange-300';
             }
             
+            // Create campaign card
             const card = document.createElement('div');
-            card.className = `campaign-card bg-white rounded-lg shadow-md overflow-hidden border-l-4 transition-all duration-300 ${positionClass || 'border-indigo-500'}`;
-            card.dataset.id = campaign.id || index;
+            card.id = `campaign-${index+1}`;
+            card.className = 'bg-white rounded-xl border border-gray-200 p-6 relative hover:shadow-lg transition-shadow';
+            card.setAttribute('data-id', campaign.id || index);
             
-            // Calculate performance score (normalized between 0-100)
-            let performanceScore = 0;
+            // Status badge class
+            const statusClass = campaign.status ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600';
+            const statusText = campaign.status ? 'Ativo' : 'Pausado';
             
-            switch(this.currentMetric) {
-                case 'ctr':
-                    performanceScore = Math.min(parseFloat(campaign.ctr) * 10, 100);
-                    break;
-                case 'clicks':
-                    performanceScore = Math.min((parseInt(campaign.clicks) / 1000) * 10, 100);
-                    break;
-                case 'spend':
-                    performanceScore = Math.min((parseFloat(campaign.spend) / 1000) * 10, 100);
-                    break;
-                case 'impressions':
-                    performanceScore = Math.min((parseInt(campaign.impressions) / 10000) * 10, 100);
-                    break;
-                default:
-                    performanceScore = 50;
-            }
+            // ROAS arrow
+            const roasChange = (campaign.roas_change || 0);
+            const roasArrow = roasChange > 0 
+                ? '<i class="fa-solid fa-arrow-up text-green-500"></i>' 
+                : roasChange < 0 
+                    ? '<i class="fa-solid fa-arrow-down text-red-500"></i>' 
+                    : '';
             
-            // Card content
-            card.innerHTML = `
-                <div class="p-5">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="font-bold text-gray-800 text-lg">
-                            ${medalIcon}${truncateText(campaign.campaign_name, 28)}
-                        </h3>
-                        <span class="text-2xl font-bold ${position <= 3 ? 'text-indigo-600' : 'text-gray-500'}">#${position}</span>
+            // Card HTML
+            let cardHTML = `
+                ${medalPosition ? `<div class="absolute -top-3 -right-3 ${medalClass} text-2xl p-2 rounded-full">${medalPosition}</div>` : ''}
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="font-semibold">${campaign.campaign_name}</h3>
+                        <span class="text-sm ${statusClass} px-2 py-1 rounded-full">${statusText}</span>
                     </div>
-                    
-                    <div class="flex flex-col gap-4">
-                        <div class="performance-meter">
-                            <div class="flex justify-between mb-1">
-                                <span class="text-sm font-medium text-gray-700">Performance</span>
-                                <span class="text-sm font-medium text-gray-700">${performanceScore.toFixed(0)}%</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2.5">
-                                <div class="h-2.5 rounded-full" style="width: ${performanceScore}%; background-color: ${this.getPerformanceColor(performanceScore)}"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-2 gap-3">
-                            <div class="bg-gray-50 p-2 rounded">
-                                <span class="text-xs text-gray-500">CTR</span>
-                                <p class="text-lg font-semibold">${campaign.ctr}%</p>
-                            </div>
-                            <div class="bg-gray-50 p-2 rounded">
-                                <span class="text-xs text-gray-500">Cliques</span>
-                                <p class="text-lg font-semibold">${parseInt(campaign.clicks).toLocaleString()}</p>
-                            </div>
-                            <div class="bg-gray-50 p-2 rounded">
-                                <span class="text-xs text-gray-500">Gasto</span>
-                                <p class="text-lg font-semibold">R$ ${parseFloat(campaign.spend).toFixed(2)}</p>
-                            </div>
-                            <div class="bg-gray-50 p-2 rounded">
-                                <span class="text-xs text-gray-500">Impressões</span>
-                                <p class="text-lg font-semibold">${parseInt(campaign.impressions).toLocaleString()}</p>
-                            </div>
-                        </div>
+                    <button class="text-gray-400 hover:text-gray-600">
+                        <i class="fa-solid fa-ellipsis-vertical"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <p class="text-sm text-gray-500">ROAS</p>
+                        <p class="text-xl font-semibold">${campaign.roas}x ${roasArrow}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-sm text-gray-500">CPA</p>
+                        <p class="text-xl font-semibold">R$ ${parseFloat(campaign.cpa || 0).toFixed(2)}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-sm text-gray-500">Gasto</p>
+                        <p class="text-xl font-semibold">R$ ${formatCurrency(campaign.spend)}</p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-sm text-gray-500">Conversões</p>
+                        <p class="text-xl font-semibold">${campaign.conversions || 0}</p>
                     </div>
                 </div>
             `;
             
-            cardsGrid.appendChild(card);
+            card.innerHTML = cardHTML;
+            campaignGrid.appendChild(card);
         });
         
-        rankingContainer.appendChild(cardsGrid);
-        this.container.appendChild(rankingContainer);
-        
-        // Create comparison chart
-        this.createComparisonChart();
+        this.container.appendChild(campaignGrid);
     }
     
     /**
-     * Get color for performance meter based on score
-     * @param {number} score - Performance score (0-100)
-     * @returns {string} - Color string
+     * Open campaign details modal
+     * @param {string|number} campaignId - ID of the campaign to show details for
      */
-    getPerformanceColor(score) {
+    openCampaignDetails(campaignId) {
+        const campaign = this.data.find(c => (c.id || '').toString() === campaignId.toString());
+        
+        if (!campaign) return;
+        
+        const modal = document.getElementById('campaign-modal');
+        if (!modal) return;
+        
+        // Fill in campaign details
+        const modalTitle = modal.querySelector('h2');
+        const modalDate = modal.querySelector('p.text-gray-500');
+        
+        // Replace problematic selectors with compatible DOM traversal
+        // Find ROAS elements
+        const roasValue = Array.from(modal.querySelectorAll('.text-sm'))
+            .find(el => el.textContent.includes('ROAS'))?.parentElement.querySelector('.text-3xl');
+        const roasChange = Array.from(modal.querySelectorAll('.text-sm'))
+            .find(el => el.textContent.includes('ROAS'))?.parentElement.querySelector('.text-sm:not(.text-gray-500)');
+        
+        // Find CPA elements
+        const cpaValue = Array.from(modal.querySelectorAll('.text-sm'))
+            .find(el => el.textContent.includes('CPA'))?.parentElement.querySelector('.text-3xl');
+        const cpaChange = Array.from(modal.querySelectorAll('.text-sm'))
+            .find(el => el.textContent.includes('CPA'))?.parentElement.querySelector('.text-sm:not(.text-gray-500)');
+        
+        // Find Spend elements
+        const spendValue = Array.from(modal.querySelectorAll('.text-sm'))
+            .find(el => el.textContent.includes('Gasto'))?.parentElement.querySelector('.text-3xl');
+        const spendBudget = Array.from(modal.querySelectorAll('.text-sm'))
+            .find(el => el.textContent.includes('Gasto'))?.parentElement.querySelector('.text-sm.text-gray-500');
+        
+        // Find Conversions elements
+        const conversionsValue = Array.from(modal.querySelectorAll('.text-sm'))
+            .find(el => el.textContent.includes('Conversões'))?.parentElement.querySelector('.text-3xl');
+        const conversionsChange = Array.from(modal.querySelectorAll('.text-sm'))
+            .find(el => el.textContent.includes('Conversões'))?.parentElement.querySelector('.text-sm:not(.text-gray-500)');
+        
+        // Update modal content with campaign data
+        if (modalTitle) modalTitle.textContent = campaign.campaign_name;
+        if (modalDate) modalDate.textContent = `Iniciada em ${campaign.start_date || 'N/A'}`;
+        if (roasValue) roasValue.textContent = `${campaign.roas || '0.0'}x`;
+        if (roasChange) {
+            const change = campaign.roas_change || 0;
+            roasChange.textContent = `${change > 0 ? '+' : ''}${change}% vs período anterior`;
+            roasChange.className = change >= 0 ? 'text-sm text-green-500' : 'text-sm text-red-500';
+        }
+        if (cpaValue) cpaValue.textContent = `R$ ${parseFloat(campaign.cpa || 0).toFixed(2)}`;
+        if (cpaChange) {
+            const change = campaign.cpa_change || 0;
+            cpaChange.textContent = `${change > 0 ? '+' : ''}${change}% vs período anterior`;
+            cpaChange.className = change <= 0 ? 'text-sm text-green-500' : 'text-sm text-red-500';
+        }
+        if (spendValue) spendValue.textContent = `R$ ${formatCurrency(campaign.spend)}`;
+        if (spendBudget) spendBudget.textContent = `Budget: R$ ${formatCurrency(campaign.budget || (campaign.spend * 1.5))}`;
+        if (conversionsValue) conversionsValue.textContent = campaign.conversions || '0';
+        if (conversionsChange) {
+            const change = campaign.conversions_change || 0;
+            conversionsChange.textContent = `${change > 0 ? '+' : ''}${change}% vs período anterior`;
+            conversionsChange.className = change >= 0 ? 'text-sm text-green-500' : 'text-sm text-red-500';
+        }
+        
+        // Update button states based on campaign status
+        const pauseButtons = Array.from(modal.querySelectorAll('button'));
+        const pauseButton = pauseButtons.find(btn => btn.innerHTML.includes('fa-pause') || btn.innerHTML.includes('fa-play'));
+        
+        if (pauseButton) {
+            if (!campaign.status) {
+                pauseButton.innerHTML = '<i class="fa-solid fa-play mr-2"></i> Ativar Campanha';
+                pauseButton.className = 'px-6 py-3 bg-green-50 text-green-600 rounded-lg hover:bg-green-100';
+            } else {
+                pauseButton.innerHTML = '<i class="fa-solid fa-pause mr-2"></i> Pausar Campanha';
+                pauseButton.className = 'px-6 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100';
+            }
+        }
+        
+        // Show modal
+        modal.classList.remove('hidden');
+    }
+    
+    /**
+     * Close campaign details modal
+     */
+    closeCampaignModal() {
+        const modal = document.getElementById('campaign-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+    
+    /**
+     * Get performance color based on metric
+     * @param {string} metric - Metric name
+     * @param {number} value - Metric value
+     * @returns {string} - Color code
+     */
+    getPerformanceColor(metric, value) {
         const isDarkMode = document.body.classList.contains('dark-mode');
         
-        if (isDarkMode) {
-            if (score >= 80) return '#4cd964'; // Green (higher contrast)
-            if (score >= 60) return '#4193ff'; // Blue (higher contrast)
-            if (score >= 40) return '#ffcc00'; // Yellow (higher contrast)
-            if (score >= 20) return '#ff9500'; // Orange (higher contrast)
-            return '#ff453a'; // Red (higher contrast)
-        } else {
-            if (score >= 80) return '#10b981'; // Green
-            if (score >= 60) return '#4f46e5'; // Indigo 
-            if (score >= 40) return '#f59e0b'; // Amber
-            if (score >= 20) return '#f97316'; // Orange
-            return '#ef4444'; // Red
+        // Default colors
+        const colors = {
+            good: isDarkMode ? '#4cd964' : '#10b981',
+            medium: isDarkMode ? '#4193ff' : '#3b82f6',
+            poor: isDarkMode ? '#ff453a' : '#ef4444'
+        };
+        
+        // Determine color based on metric and value
+        switch(metric) {
+            case 'roas':
+                return value >= 3 ? colors.good : value >= 2 ? colors.medium : colors.poor;
+            case 'cpa':
+                return value <= 30 ? colors.good : value <= 50 ? colors.medium : colors.poor;
+            case 'conversions':
+                return value >= 300 ? colors.good : value >= 100 ? colors.medium : colors.poor;
+            default:
+                return colors.medium;
         }
     }
     
@@ -441,7 +382,32 @@ export class CampaignRankingView {
      * @param {Array} data - Array of campaign data
      */
     render(data) {
-        this.data = data;
+        // Enrich data with ROAS values if not present
+        const enrichedData = data.map(campaign => {
+            // Add ROAS if not present (calculated as conversions value / spend)
+            if (!campaign.roas) {
+                const conversionValue = parseFloat(campaign.conversion_value || 0) || 
+                                      parseFloat(campaign.conversions || 0) * 50; // Assume 50 per conversion if no value
+                const spend = parseFloat(campaign.spend || 0);
+                campaign.roas = spend > 0 ? ((conversionValue / spend) || 0).toFixed(1) : '0.0';
+            }
+            
+            // Add CPA if not present (calculated as spend / conversions)
+            if (!campaign.cpa) {
+                const spend = parseFloat(campaign.spend || 0);
+                const conversions = parseInt(campaign.conversions || 0);
+                campaign.cpa = conversions > 0 ? (spend / conversions).toFixed(2) : '0.00';
+            }
+            
+            // Add sample changes for demo
+            campaign.roas_change = (Math.random() > 0.5 ? 1 : -1) * Math.floor(Math.random() * 20);
+            campaign.cpa_change = (Math.random() > 0.5 ? 1 : -1) * Math.floor(Math.random() * 15);
+            campaign.conversions_change = (Math.random() > 0.5 ? 1 : -1) * Math.floor(Math.random() * 25);
+            
+            return campaign;
+        });
+        
+        this.data = enrichedData;
         
         // Sort data based on current metric
         this.sortData();

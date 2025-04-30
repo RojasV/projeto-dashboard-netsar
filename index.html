@@ -263,6 +263,71 @@
         </main>
     </div>
 
+    <!-- Campaign Details Modal -->
+    <div id="campaign-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl w-[800px] max-w-[90%] p-8">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h2 class="text-2xl font-semibold">Campanha Black Friday</h2>
+                    <p class="text-gray-500">Iniciada em 15/11/2025</p>
+                </div>
+                <button class="text-gray-400 hover:text-gray-600">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                <div class="space-y-6">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">ROAS</p>
+                        <div class="flex items-baseline gap-2">
+                            <p class="text-3xl font-semibold">3.8x</p>
+                            <p class="text-sm text-green-500">+12% vs período anterior</p>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">CPA</p>
+                        <div class="flex items-baseline gap-2">
+                            <p class="text-3xl font-semibold">R$ 42,50</p>
+                            <p class="text-sm text-red-500">+5% vs período anterior</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">Gasto Total</p>
+                        <div class="flex items-baseline gap-2">
+                            <p class="text-3xl font-semibold">R$ 15.280</p>
+                            <p class="text-sm text-gray-500">Budget: R$ 20.000</p>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 mb-1">Conversões</p>
+                        <div class="flex items-baseline gap-2">
+                            <p class="text-3xl font-semibold">359</p>
+                            <p class="text-sm text-green-500">+18% vs período anterior</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap gap-4">
+                <button class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 edit-btn">
+                    <i class="fa-solid fa-pen-to-square mr-2"></i>
+                    Editar Campanha
+                </button>
+                <button class="px-6 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 pause-btn">
+                    <i class="fa-solid fa-pause mr-2"></i>
+                    Pausar Campanha
+                </button>
+                <button class="px-6 py-3 bg-gray-50 text-gray-600 rounded-lg hover:bg-gray-100 report-btn">
+                    <i class="fa-solid fa-chart-line mr-2"></i>
+                    Ver Relatório
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal de Confirmação -->
     <div id="pdfModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden" role="dialog" aria-labelledby="pdfModalTitle" aria-modal="true">
         <div class="bg-white p-6 rounded-lg shadow-md max-w-md w-full">

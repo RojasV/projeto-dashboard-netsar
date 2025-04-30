@@ -108,27 +108,27 @@ export class DashboardController {
     setRefreshButtonLoading(isLoading) {
         if (!this.refreshBtn) return;
         
-        const icon = this.refreshBtn.querySelector('i');
-        const text = this.refreshBtn.querySelector('span');
-        
         if (isLoading) {
+            // Armazena o conteúdo original para restaurar mais tarde
+            if (!this.refreshBtn.hasAttribute('data-original-html')) {
+                this.refreshBtn.setAttribute('data-original-html', this.refreshBtn.innerHTML);
+            }
+            
+            // Exibe apenas o ícone girando, sem texto
+            this.refreshBtn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i>';
             this.refreshBtn.disabled = true;
-            this.refreshBtn.classList.add('opacity-70', 'cursor-not-allowed');
-            if (icon) {
-                icon.classList.add('fa-spin');
-            }
-            if (text) {
-                text.textContent = 'Atualizando...';
-            }
+            this.refreshBtn.classList.add('opacity-70');
         } else {
+            // Restaura o conteúdo original do botão
+            if (this.refreshBtn.hasAttribute('data-original-html')) {
+                this.refreshBtn.innerHTML = this.refreshBtn.getAttribute('data-original-html');
+                this.refreshBtn.removeAttribute('data-original-html');
+            } else {
+                // Fallback caso não tenha o atributo data-original-html
+                this.refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i> <span>Atualizar</span>';
+            }
             this.refreshBtn.disabled = false;
-            this.refreshBtn.classList.remove('opacity-70', 'cursor-not-allowed');
-            if (icon) {
-                icon.classList.remove('fa-spin');
-            }
-            if (text) {
-                text.textContent = 'Atualizar';
-            }
+            this.refreshBtn.classList.remove('opacity-70');
         }
     }
     
@@ -217,5 +217,61 @@ export class DashboardController {
         
         // Reset refresh button state
         this.setRefreshButtonLoading(false);
+    }
+
+    /**
+     * Fetch data from the API
+     * @param {boolean} [showLoadingState=true] Whether to show loading states
+     */
+    async fetchData(showLoadingState = true) {
+        // Get the refresh button and disable it during the request
+        const refreshBtn = document.getElementById('dashboardRefreshBtn');
+        if (refreshBtn) {
+            refreshBtn.disabled = true;
+            
+            // Show only the loading icon, no text
+            const originalInnerHTML = refreshBtn.innerHTML;
+            refreshBtn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i>';
+            refreshBtn.classList.add('opacity-70');
+        }
+        
+        // Show loading state on all charts
+        if (showLoadingState) {
+            const chartContainers = document.querySelectorAll('#dashboard .chart-container');
+            chartContainers.forEach(container => {
+                container.classList.add('loading');
+            });
+        }
+        
+        try {
+            // Fetch data from API
+            const response = await this.apiService.getDashboardData();
+            this.data = response;
+            
+            // Update UI with the new data
+            this.renderStats();
+            this.renderCharts();
+            
+            // Return the data in case it's needed
+            return this.data;
+        } catch (error) {
+            this.errorHandler.handleError('Error fetching dashboard data', error);
+            return null;
+        } finally {
+            // Re-enable refresh button and restore original text
+            if (refreshBtn) {
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="fas fa-sync-alt"></i>';
+                refreshBtn.classList.remove('opacity-70');
+            }
+            
+            // Remove loading state from all charts
+            if (showLoadingState) {
+                const chartContainers = document.querySelectorAll('#dashboard .chart-container');
+                chartContainers.forEach(container => {
+                    container.classList.remove('loading');
+                });
+            }
+        }
     }
 } 
