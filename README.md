@@ -13,6 +13,9 @@
   <a href="#funcionalidades">Funcionalidades</a> •
   <a href="#tecnologias">Tecnologias</a> •
   <a href="#arquitetura">Arquitetura</a> •
+  <a href="#fluxo-do-software">Fluxo do Software</a> •
+  <a href="#ponto-atual-do-projeto">Ponto Atual do Projeto</a> •
+  <a href="#próximos-passos">Próximos Passos</a> •
   <a href="#instalação">Instalação</a> •
   <a href="#demonstração">Demonstração</a> •
   <a href="#estrutura">Estrutura</a> •
@@ -81,6 +84,42 @@ O Meta Ads Dashboard implementa uma arquitetura MVC (Model-View-Controller) rigo
 
 O sistema utiliza o padrão Observer para comunicação entre componentes, permitindo atualizações em tempo real da interface quando os dados mudam.
 
+## Fluxo do Software
+
+Abaixo está um diagrama simplificado do fluxo de dados e eventos na aplicação:
+
+```mermaid
+flowchart TD
+    A[Usuário] -->|Interage| B[Views]
+    B -->|Dispara eventos| C[Controllers]
+    C -->|Solicita dados| D[Services/ApiService]
+    D -->|Recebe dados| C
+    C -->|Atualiza| B
+    C -->|Manipula| E[Models]
+    E -->|Fornece dados| C
+```
+
+- O usuário interage com a interface (Views), que dispara eventos para os Controllers.
+- Controllers coordenam a lógica, solicitam dados aos Services (como ApiService) e manipulam Models.
+- Dados recebidos são processados e enviados de volta para as Views, atualizando a interface em tempo real.
+- O padrão Observer/EventEmitter é utilizado para comunicação desacoplada entre componentes.
+
+## Ponto Atual do Projeto
+
+- **Estrutura Completa**: O projeto já possui todos os diretórios e arquivos principais de um sistema robusto (controllers, views, models, services, utils).
+- **API Integrada**: O `ApiService` está pronto e implementa métodos para buscar dados do dashboard, campanhas, relatórios, análise por IA e alteração de status de campanhas.
+- **Controllers e Views**: Estão implementados para as principais áreas do sistema (dashboard, campanhas, relatórios, navegação, tema).
+- **Inicialização**: O app já inicializa todos os controladores e listeners ao carregar a página.
+- **Documentação**: O README está detalhado, explicando arquitetura, funcionalidades, tecnologias e instruções de uso.
+
+## Próximos Passos
+
+- **Testes e Validação**: Implementar testes automatizados para garantir robustez.
+- **Ajustes Finais de UI/UX**: Refinar visual, responsividade e acessibilidade.
+- **Integração Real com API**: Garantir que endpoints externos estejam funcionando e retornando dados reais.
+- **Feedback de Usuário**: Realizar testes de usabilidade e coletar feedback para melhorias.
+- **Deploy/Distribuição**: Preparar para produção, se ainda não feito.
+
 ## Instalação
 
 ### Requisitos
@@ -90,12 +129,12 @@ O sistema utiliza o padrão Observer para comunicação entre componentes, permi
 ### Processo de Instalação
 1. Clone o repositório:
    ```bash 
-   git clone https://github.com/netsar/meta-ads-dashboard.git
+   git clone https://github.com/RojasV/projeto-dashboard-netsar.git
    ```
 
 2. Navegue até o diretório:
    ```bash
-   cd meta-ads-dashboard
+   cd projeto-dashboard-netsar
    ```
 
 3. Para desenvolvimento local, inicie um servidor web:

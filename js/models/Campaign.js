@@ -23,8 +23,13 @@ export class Campaign {
         this.cpc = parseFloat(data.cpc || 0);
         this.index = index;
         
+        // Preservar o status original da API
+        this.status = data.status;
+        
         // Store the raw data for advanced usages
         this.rawData = data;
+        
+        console.log(`Campaign model criado para ${this.name} com status: ${this.status} (tipo: ${typeof this.status})`);
     }
     
     /**
@@ -46,6 +51,11 @@ export class Campaign {
      * @returns {boolean} - True if campaign is active, false otherwise
      */
     isActive() {
+        // Para compatibilidade com código existente, retornar baseado no status original,
+        // não apenas na data de término
+        if (this.status === "ACTIVE") return true;
+        
+        // Fallback para o comportamento original baseado em data
         if (!this.endDate) return false;
         return new Date(this.endDate) >= new Date();
     }
@@ -55,6 +65,11 @@ export class Campaign {
      * @returns {string} - Status text
      */
     getStatusText() {
+        // Texto baseado no status real da API
+        if (this.status === "ACTIVE") return "Ativa";
+        if (this.status === "PAUSED") return "Pausada";
+        
+        // Fallback para o comportamento original
         return this.isActive() ? 'Ativa' : 'Finalizada';
     }
     
@@ -63,6 +78,11 @@ export class Campaign {
      * @returns {string} - CSS class name
      */
     getStatusClass() {
+        // Classes baseadas no status real da API
+        if (this.status === "ACTIVE") return 'bg-green-100 text-green-800';
+        if (this.status === "PAUSED") return 'bg-red-100 text-red-800';
+        
+        // Fallback para o comportamento original
         return this.isActive() ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
     }
     

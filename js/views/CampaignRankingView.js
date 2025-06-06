@@ -3,6 +3,7 @@
  * Renders an interactive ranking of campaigns by performance metrics
  */
 import { formatCurrency, formatPercentage, truncateText, generateColorPalette } from '../utils/DataHelpers.js';
+import { ApiService } from '../api/ApiService.js';
 
 export class CampaignRankingView {
     /**
@@ -16,6 +17,11 @@ export class CampaignRankingView {
         this.sortDirection = 'desc'; // Default sort direction
         this.charts = {};
         this.dateFilter = 'last7days'; // Default date filter
+        this.apiService = new ApiService(); // Add API service instance
+        
+        // Bind event listeners for API responses
+        this.apiService.on('campaign:status_changed', this.handleStatusChange.bind(this));
+        this.apiService.on('api:error', this.handleApiError.bind(this));
     }
     
     /**
@@ -181,6 +187,10 @@ export class CampaignRankingView {
         campaignGrid.id = 'campaign-grid';
         campaignGrid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
         
+        console.log('Renderizando ranking...:' + this.data);
+
+        console.log('Status da campanha:', this.data[0].status);
+
         // Add campaign cards
         this.data.forEach((campaign, index) => {
             // Determine medal position elements
@@ -204,9 +214,13 @@ export class CampaignRankingView {
             card.className = 'bg-white rounded-xl border border-gray-200 p-6 relative hover:shadow-lg transition-shadow';
             card.setAttribute('data-id', campaign.id || index);
             
-            // Status badge class
-            const statusClass = campaign.status ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600';
-            const statusText = campaign.status ? 'Ativo' : 'Pausado';
+            // Status badge class - Usando o status exato sem modificar
+            // O status pode vir como "ACTIVE" ou false da API
+            const isActive = campaign.status === "ACTIVE";
+            const statusClass = isActive ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600';
+            const statusText = isActive ? 'Ativo' : 'Pausado';
+            
+            console.log(`Campanha ${campaign.campaign_name} - Status original: ${campaign.status} (tipo: ${typeof campaign.status}), Exibindo como: ${statusText}`);
             
             // ROAS arrow
             const roasChange = (campaign.roas_change || 0);
@@ -261,81 +275,238 @@ export class CampaignRankingView {
      */
     openCampaignDetails(campaignId) {
         const campaign = this.data.find(c => (c.id || '').toString() === campaignId.toString());
-        
         if (!campaign) return;
-        
         const modal = document.getElementById('campaign-modal');
         if (!modal) return;
-        
-        // Fill in campaign details
+
+        // Log completo do objeto da campanha para verificação
+        console.log("Objeto completo da campanha sendo exibida no modal:", campaign);
+
+        // Salvar o ID da campanha atual no modal para referência futura
+        modal.setAttribute('data-campaign-id', campaign.id);
+
+        // Título e data
         const modalTitle = modal.querySelector('h2');
         const modalDate = modal.querySelector('p.text-gray-500');
-        
-        // Replace problematic selectors with compatible DOM traversal
-        // Find ROAS elements
-        const roasValue = Array.from(modal.querySelectorAll('.text-sm'))
-            .find(el => el.textContent.includes('ROAS'))?.parentElement.querySelector('.text-3xl');
-        const roasChange = Array.from(modal.querySelectorAll('.text-sm'))
-            .find(el => el.textContent.includes('ROAS'))?.parentElement.querySelector('.text-sm:not(.text-gray-500)');
-        
-        // Find CPA elements
-        const cpaValue = Array.from(modal.querySelectorAll('.text-sm'))
-            .find(el => el.textContent.includes('CPA'))?.parentElement.querySelector('.text-3xl');
-        const cpaChange = Array.from(modal.querySelectorAll('.text-sm'))
-            .find(el => el.textContent.includes('CPA'))?.parentElement.querySelector('.text-sm:not(.text-gray-500)');
-        
-        // Find Spend elements
-        const spendValue = Array.from(modal.querySelectorAll('.text-sm'))
-            .find(el => el.textContent.includes('Gasto'))?.parentElement.querySelector('.text-3xl');
-        const spendBudget = Array.from(modal.querySelectorAll('.text-sm'))
-            .find(el => el.textContent.includes('Gasto'))?.parentElement.querySelector('.text-sm.text-gray-500');
-        
-        // Find Conversions elements
-        const conversionsValue = Array.from(modal.querySelectorAll('.text-sm'))
-            .find(el => el.textContent.includes('Conversões'))?.parentElement.querySelector('.text-3xl');
-        const conversionsChange = Array.from(modal.querySelectorAll('.text-sm'))
-            .find(el => el.textContent.includes('Conversões'))?.parentElement.querySelector('.text-sm:not(.text-gray-500)');
-        
-        // Update modal content with campaign data
         if (modalTitle) modalTitle.textContent = campaign.campaign_name;
         if (modalDate) modalDate.textContent = `Iniciada em ${campaign.start_date || 'N/A'}`;
-        if (roasValue) roasValue.textContent = `${campaign.roas || '0.0'}x`;
+
+        // ROAS
+        const roasValue = modal.querySelector('#modal-roas-value');
+        const roasChange = modal.querySelector('#modal-roas-change');
+        if (roasValue) roasValue.textContent = `${campaign.roas}x`;
         if (roasChange) {
             const change = campaign.roas_change || 0;
             roasChange.textContent = `${change > 0 ? '+' : ''}${change}% vs período anterior`;
-            roasChange.className = change >= 0 ? 'text-sm text-green-500' : 'text-sm text-red-500';
+            roasChange.className = `text-sm ${change >= 0 ? 'text-green-500' : 'text-red-500'}`;
         }
+
+        // CPA
+        const cpaValue = modal.querySelector('#modal-cpa-value');
+        const cpaChange = modal.querySelector('#modal-cpa-change');
         if (cpaValue) cpaValue.textContent = `R$ ${parseFloat(campaign.cpa || 0).toFixed(2)}`;
         if (cpaChange) {
             const change = campaign.cpa_change || 0;
             cpaChange.textContent = `${change > 0 ? '+' : ''}${change}% vs período anterior`;
-            cpaChange.className = change <= 0 ? 'text-sm text-green-500' : 'text-sm text-red-500';
+            cpaChange.className = `text-sm ${change <= 0 ? 'text-green-500' : 'text-red-500'}`;
         }
+
+        // Gasto
+        const spendValue = modal.querySelector('#modal-spend-value');
+        const spendBudget = modal.querySelector('#modal-spend-budget');
         if (spendValue) spendValue.textContent = `R$ ${formatCurrency(campaign.spend)}`;
         if (spendBudget) spendBudget.textContent = `Budget: R$ ${formatCurrency(campaign.budget || (campaign.spend * 1.5))}`;
+
+        // Conversões
+        const conversionsValue = modal.querySelector('#modal-conversions-value');
+        const conversionsChange = modal.querySelector('#modal-conversions-change');
         if (conversionsValue) conversionsValue.textContent = campaign.conversions || '0';
         if (conversionsChange) {
             const change = campaign.conversions_change || 0;
             conversionsChange.textContent = `${change > 0 ? '+' : ''}${change}% vs período anterior`;
-            conversionsChange.className = change >= 0 ? 'text-sm text-green-500' : 'text-sm text-red-500';
+            conversionsChange.className = `text-sm ${change >= 0 ? 'text-green-500' : 'text-red-500'}`;
+        }
+
+        // Buscar a área de botões
+        const buttonArea = modal.querySelector('.modal-buttons') || document.createElement('div');
+        if (!buttonArea.classList.contains('modal-buttons')) {
+            buttonArea.className = 'modal-buttons flex justify-end mt-8 space-x-4';
+            modal.querySelector('.bg-white').appendChild(buttonArea);
         }
         
-        // Update button states based on campaign status
-        const pauseButtons = Array.from(modal.querySelectorAll('button'));
-        const pauseButton = pauseButtons.find(btn => btn.innerHTML.includes('fa-pause') || btn.innerHTML.includes('fa-play'));
+        // Limpar botões anteriores
+        buttonArea.innerHTML = '';
         
-        if (pauseButton) {
-            if (!campaign.status) {
-                pauseButton.innerHTML = '<i class="fa-solid fa-play mr-2"></i> Ativar Campanha';
-                pauseButton.className = 'px-6 py-3 bg-green-50 text-green-600 rounded-lg hover:bg-green-100';
-            } else {
-                pauseButton.innerHTML = '<i class="fa-solid fa-pause mr-2"></i> Pausar Campanha';
-                pauseButton.className = 'px-6 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100';
-            }
+        // Adicionar botões de controle
+        
+        // Botão de pausa - sempre envia PAUSED
+        const pauseButton = document.createElement('button');
+        pauseButton.className = 'px-6 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 pause-btn';
+        pauseButton.innerHTML = '<i class="fa-solid fa-pause mr-2"></i> Desativar Campanha';
+        pauseButton.onclick = () => this.toggleCampaignStatus(campaign.id, "PAUSED");
+        buttonArea.appendChild(pauseButton);
+        
+        // Botão de ativação - sempre envia ACTIVE
+        const playButton = document.createElement('button');
+        playButton.className = 'px-6 py-3 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 play-btn';
+        playButton.innerHTML = '<i class="fa-solid fa-play mr-2"></i> Ativar Campanha';
+        playButton.onclick = () => this.toggleCampaignStatus(campaign.id, "ACTIVE");
+        buttonArea.appendChild(playButton);
+        
+        // Exibir ou ocultar botões com base no status apenas para visual
+        // Mas cada botão funciona independente do status
+        try {
+            const isActive = campaign.status === "ACTIVE";
+            pauseButton.style.display = isActive ? 'block' : 'none';
+            playButton.style.display = isActive ? 'none' : 'block';
+        } catch (error) {
+            // Se houver erro na verificação do status, mostrar ambos
+            pauseButton.style.display = 'block';
+            playButton.style.display = 'block';
         }
         
         // Show modal
         modal.classList.remove('hidden');
+    }
+    
+    /**
+     * Toggle campaign status (active/inactive)
+     * @param {string|number} campaignId - ID of the campaign to toggle
+     * @param {string} newStatus - Novo status ("ACTIVE" ou "PAUSED")
+     */
+    async toggleCampaignStatus(campaignId, newStatus) {
+        const campaign = this.data.find(c => (c.id || '').toString() === campaignId.toString());
+        
+        if (campaign) {
+            console.log(`Enviando alteração de status:`, {
+                id: campaignId,
+                campaign_name: campaign.campaign_name,
+                novo_status: newStatus
+            });
+        }
+        
+        const modal = document.getElementById('campaign-modal');
+        if (!modal) return;
+        
+        // Encontrar o botão que foi clicado, com base no status que está sendo solicitado
+        const buttonSelector = newStatus === "ACTIVE" ? '.play-btn' : '.pause-btn';
+        const button = modal.querySelector(buttonSelector);
+        
+        if (!button) return;
+        
+        // Mostrar estado de loading no botão
+        const originalText = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = `
+            <i class="fa-solid fa-spinner fa-spin mr-2"></i>
+            ${newStatus === "ACTIVE" ? 'Ativando...' : 'Desativando...'}
+        `;
+        
+        try {
+            // Chamar a API para alterar o status
+            await this.apiService.toggleCampaignStatus(campaignId, newStatus);
+            
+            // O botão será atualizado por handleStatusChange quando o evento campaign:status_changed for emitido
+        } catch (error) {
+            // Restaurar botão em caso de erro
+            button.disabled = false;
+            button.innerHTML = originalText;
+            
+            // Exibir notificação de erro (se tiver um sistema de notificação)
+            console.error('Erro ao alterar status da campanha:', error);
+        }
+    }
+    
+    /**
+     * Handle successful campaign status change
+     * @param {Object} data - Status change response data
+     */
+    handleStatusChange(data) {
+        if (!data.success) {
+            console.error('Falha ao alterar status da campanha');
+            return;
+        }
+        
+        // Atualizar dados da campanha localmente
+        const campaign = this.data.find(c => (c.id || '').toString() === data.campaignId.toString());
+        if (campaign) {
+            // Registrar a alteração
+            console.log(`Alterando status da campanha ${campaign.campaign_name}:`, {
+                id: data.campaignId,
+                novo_status: data.new_status
+            });
+            
+            // Atualizar o status com o novo status
+            campaign.status = data.new_status;
+            
+            // Atualizar UI no modal
+            const modal = document.getElementById('campaign-modal');
+            if (modal) {
+                // Encontrar os botões
+                const pauseButton = modal.querySelector('.pause-btn');
+                const playButton = modal.querySelector('.play-btn');
+                
+                if (pauseButton && playButton) {
+                    // Ativar os botões (podem estar desativados durante o loading)
+                    pauseButton.disabled = false;
+                    playButton.disabled = false;
+                    
+                    try {
+                        // Exibir/ocultar botões conforme o status
+                        const isActive = campaign.status === "ACTIVE";
+                        pauseButton.style.display = isActive ? 'block' : 'none';
+                        playButton.style.display = isActive ? 'none' : 'block';
+                    } catch (error) {
+                        // Em caso de erro, mostrar ambos os botões
+                        pauseButton.style.display = 'block';
+                        playButton.style.display = 'block';
+                    }
+                }
+            }
+            
+            // Re-renderizar a grid para atualizar os cards
+            this.renderRanking();
+        }
+    }
+    
+    /**
+     * Handle API error
+     * @param {Object} error - Error object from API
+     */
+    handleApiError(error) {
+        console.error('API Error:', error);
+        
+        // Verificar se é um erro de toggle
+        if (error.status === 'toggle_error') {
+            const modal = document.getElementById('campaign-modal');
+            if (modal) {
+                const toggleButton = Array.from(modal.querySelectorAll('button'))
+                    .find(btn => btn.classList.contains('pause-btn') || btn.classList.contains('play-btn'));
+                
+                if (toggleButton) {
+                    toggleButton.disabled = false;
+                    
+                    // Restaurar estado do botão com base no status atual da campanha
+                    const campaignId = modal.getAttribute('data-campaign-id');
+                    const campaign = this.data.find(c => (c.id || '').toString() === campaignId);
+                    
+                    if (campaign) {
+                        console.log("Restaurando botão após erro, status atual:", campaign.status);
+                        
+                        const isActive = campaign.status === "ACTIVE";
+                        if (isActive) {
+                            toggleButton.innerHTML = '<i class="fa-solid fa-pause mr-2"></i> Desativar Campanha';
+                            toggleButton.className = 'px-6 py-3 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 pause-btn';
+                            console.log("Botão restaurado para: Desativar Campanha (status=ACTIVE)");
+                        } else {
+                            toggleButton.innerHTML = '<i class="fa-solid fa-play mr-2"></i> Ativar Campanha';
+                            toggleButton.className = 'px-6 py-3 bg-green-50 text-green-600 rounded-lg hover:bg-green-100 play-btn';
+                            console.log("Botão restaurado para: Ativar Campanha (status≠ACTIVE)");
+                        }
+                    }
+                }
+            }
+        }
     }
     
     /**
@@ -382,8 +553,14 @@ export class CampaignRankingView {
      * @param {Array} data - Array of campaign data
      */
     render(data) {
+
+        console.log('Renderizando data:' + JSON.stringify(data));
+
         // Enrich data with ROAS values if not present
         const enrichedData = data.map(campaign => {
+            // Log do status da campanha recebido da API
+            console.log(`Campanha ${campaign.campaign_name || campaign.campaign_id} recebida com status: ${campaign.status}`);
+            
             // Add ROAS if not present (calculated as conversions value / spend)
             if (!campaign.roas) {
                 const conversionValue = parseFloat(campaign.conversion_value || 0) || 

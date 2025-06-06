@@ -1789,3 +1789,45 @@ body:not(.dark-mode) .refresh-btn.opacity-70 {
   background-color: rgba(107, 114, 128, 0.1);
   color: rgb(107, 114, 128);
 }
+
+/* Estado desabilitado para botões do modal */
+#campaign-modal button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Estado de loading dos botões de toggle */
+#campaign-modal button.pause-btn .fa-spinner,
+#campaign-modal button.play-btn .fa-spinner {
+  animation: fa-spin 1s infinite linear;
+}
+
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Tema escuro para botões do modal */
+.dark-mode #campaign-modal button.edit-btn {
+  background-color: var(--dark-blue-accent);
+  color: var(--dark-text);
+}
+
+.dark-mode #campaign-modal button.pause-btn {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: rgba(239, 68, 68, 0.9);
+}
+
+.dark-mode #campaign-modal button.play-btn {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: rgba(16, 185, 129, 0.9);
+}
+
+.dark-mode #campaign-modal button.report-btn {
+  background-color: rgba(107, 114, 128, 0.2);
+  color: rgba(107, 114, 128, 0.9);
+}

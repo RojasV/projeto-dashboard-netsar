@@ -9,6 +9,7 @@ export class ApiService extends EventEmitter {
         super();
         this.apiUrl = 'https://n8nultraintelligentv3webhook.ultraintelligentv3.com/webhook/relatorios';
         this.aiAnalysisUrl = 'https://n8nultraintelligentv3webhook.ultraintelligentv3.com/webhook/gerarRelatorioPDF';
+        this.toggleStatusUrl = 'https://n8nultraintelligentv3webhook.ultraintelligentv3.com/webhook/gerenciarStatusDaCampanha';
     }
 
     /**
@@ -50,8 +51,8 @@ export class ApiService extends EventEmitter {
             return [response];
         } catch (error) {
             console.error('Error extracting data from response:', error);
-            this.emit('api:error', { 
-                status: 'parse_error', 
+            this.emit('api:error', {
+                status: 'parse_error',
                 message: 'Failed to parse API response'
             });
             return [];
@@ -66,7 +67,7 @@ export class ApiService extends EventEmitter {
         const requestPayload = {
             level: 'campaign',
             limit: 300,
-            metrics: ['campaign_name', 'spend', 'impressions', 'reach', 'clicks', 'ctr', 'cpc']
+            metrics: ['campaign_id', 'campaign_name', 'spend', 'impressions', 'reach', 'clicks', 'ctr', 'cpc']
         };
 
         try {
@@ -82,13 +83,13 @@ export class ApiService extends EventEmitter {
 
             const data = await response.json();
             const extractedData = this.extractDataFromResponse(data);
-            
+
             this.emit('dashboard:data', extractedData);
             return extractedData;
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
-            this.emit('api:error', { 
-                status: 'fetch_error', 
+            this.emit('api:error', {
+                status: 'fetch_error',
                 message: 'Failed to fetch dashboard data',
                 error
             });
@@ -104,7 +105,10 @@ export class ApiService extends EventEmitter {
         const requestPayload = {
             level: 'campaign',
             limit: 300,
-            metrics: ['campaign_name', 'spend', 'impressions', 'reach', 'clicks', 'ctr', 'cpc', 'date_start', 'date_stop']
+            metrics: [
+                'campaign_id',
+                'campaign_name', 'spend', 'impressions', 'reach', 'clicks', 'ctr', 'cpc', 'date_start', 'date_stop'
+            ]
         };
 
         try {
@@ -120,13 +124,13 @@ export class ApiService extends EventEmitter {
 
             const data = await response.json();
             const extractedData = this.extractDataFromResponse(data);
-            
+
             this.emit('campaigns:data', extractedData);
             return extractedData;
         } catch (error) {
             console.error('Error fetching campaigns data:', error);
-            this.emit('api:error', { 
-                status: 'fetch_error', 
+            this.emit('api:error', {
+                status: 'fetch_error',
                 message: 'Failed to fetch campaigns data',
                 error
             });
@@ -141,8 +145,8 @@ export class ApiService extends EventEmitter {
      */
     async fetchReportData(selectedMetrics) {
         if (!selectedMetrics || selectedMetrics.length === 0) {
-            this.emit('api:error', { 
-                status: 'validation_error', 
+            this.emit('api:error', {
+                status: 'validation_error',
                 message: 'No metrics selected'
             });
             return [];
@@ -150,8 +154,9 @@ export class ApiService extends EventEmitter {
 
         // Create API request metrics array
         let apiMetrics = [...selectedMetrics];
-        
+
         // Always include required fields
+        if (!apiMetrics.includes('campaign_id')) apiMetrics.push('campaign_id');
         if (!apiMetrics.includes('campaign_name')) apiMetrics.push('campaign_name');
         if (!apiMetrics.includes('date_start')) apiMetrics.push('date_start');
         if (!apiMetrics.includes('date_stop')) apiMetrics.push('date_stop');
@@ -175,22 +180,22 @@ export class ApiService extends EventEmitter {
 
             const data = await response.json();
             console.log('Data com erro:', data);
-            
+
             const extractedData = this.extractDataFromResponse(data);
-            
+
             if (!data.error) {
                 // Attach the original metrics selection to the data
                 extractedData.selectedMetrics = selectedMetrics;
-                
+
                 this.emit('report:data', extractedData);
                 return extractedData;
             }
-            
+
             return [];
         } catch (error) {
             console.error('Error generating report:', error);
-            this.emit('api:error', { 
-                status: 'fetch_error', 
+            this.emit('api:error', {
+                status: 'fetch_error',
                 message: 'Failed to generate report',
                 error
             });
@@ -219,12 +224,71 @@ export class ApiService extends EventEmitter {
             return data.output;
         } catch (error) {
             console.error('Error generating AI analysis:', error);
-            this.emit('api:error', { 
-                status: 'ai_error', 
+            this.emit('api:error', {
+                status: 'ai_error',
                 message: 'Failed to generate AI analysis',
                 error
             });
             return '';
         }
     }
-} 
+
+    /**
+     * Toggles the status of a campaign (active/inactive)
+     * @param {string|number} campaignId - ID of the campaign to toggle
+     * @param {string} newStatus - Novo status para a campanha ("ACTIVE" ou "PAUSED")
+     * @returns {Promise} - A promise that resolves with the updated campaign data
+     */
+    async toggleCampaignStatus(campaignId, newStatus) {
+        console.log(`API Service - Alterando status da campanha ${campaignId} para: ${newStatus}`);
+        
+        const requestPayload = {
+            campaign_id: campaignId,
+            status: newStatus // Novo status (ACTIVE ou PAUSED)
+        };
+
+        try {
+            console.log('Enviando requisição para:', this.toggleStatusUrl);
+            console.log('Payload:', requestPayload);
+            
+            const response = await fetch(this.toggleStatusUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestPayload)
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const data = await response.json();
+            console.log('Resposta da API de toggle:', data);
+            
+            // Emitir evento de sucesso
+            this.emit('campaign:status_changed', {
+                campaignId,
+                success: true,
+                new_status: newStatus
+            });
+            
+            return data;
+        } catch (error) {
+            console.error('Error toggling campaign status:', error);
+            
+            // Emit error event
+            this.emit('api:error', {
+                status: 'toggle_error',
+                message: 'Failed to toggle campaign status',
+                error
+            });
+            
+            // Also emit status change with failure flag
+            this.emit('campaign:status_changed', {
+                campaignId,
+                success: false
+            });
+            
+            throw error;
+        }
+    }
+}

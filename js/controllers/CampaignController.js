@@ -532,6 +532,8 @@ export class CampaignController {
         this.filteredCampaigns.forEach(campaign => {
             const row = document.createElement('tr');
             row.className = 'hover:bg-blue-light transition-colors';
+            row.setAttribute('data-id', campaign.id);
+            row.setAttribute('data-status', campaign.status ? 'ativo' : 'pausado');
             row.innerHTML = `
                 <td class="py-3 px-4 text-left">${campaign.getFormattedName()}</td>
                 <td class="py-3 px-4 text-left">
@@ -598,18 +600,34 @@ export class CampaignController {
      */
     renderRankingView() {
         // Convert Campaign models to plain objects for the ranking view
-        const rankingData = this.campaignsData.map(campaign => ({
-            id: campaign.id,
-            campaign_name: campaign.getFormattedName(),
-            spend: campaign.spend,
-            clicks: campaign.clicks,
-            impressions: campaign.impressions,
-            ctr: parseFloat(campaign.ctr || 0),
-            cpc: parseFloat(campaign.cpc || 0),
-            status: campaign.isActive(),
-            start_date: campaign.getFormattedStartDate(),
-            end_date: campaign.getFormattedEndDate()
-        }));
+        const rankingData = this.campaignsData.map(campaign => {
+            // Preservando os dados originais da campanha, especialmente o status
+            const originalCampaignData = campaign.rawData || {};
+            
+            return {
+                id: campaign.id,
+                campaign_id: originalCampaignData.campaign_id || campaign.id,
+                campaign_name: originalCampaignData.campaign_name || campaign.getFormattedName(),
+                spend: originalCampaignData.spend || campaign.spend,
+                clicks: originalCampaignData.clicks || campaign.clicks,
+                impressions: originalCampaignData.impressions || campaign.impressions,
+                ctr: parseFloat(originalCampaignData.ctr || campaign.ctr || 0),
+                cpc: parseFloat(originalCampaignData.cpc || campaign.cpc || 0),
+                // Preservar o status exato como veio da API
+                status: originalCampaignData.status !== undefined ? originalCampaignData.status : campaign.status,
+                date_start: originalCampaignData.date_start || campaign.startDate,
+                date_stop: originalCampaignData.date_stop || campaign.endDate,
+                // Formatar datas para exibição se necessário
+                start_date: originalCampaignData.date_start || campaign.getFormattedStartDate(),
+                end_date: originalCampaignData.date_stop || campaign.getFormattedEndDate()
+            };
+        });
+            
+        console.log('Passando dados para o ranking view:', rankingData);
+        // Verificar o status da primeira campanha, só para debug
+        if (rankingData.length > 0) {
+            console.log('Status da primeira campanha:', rankingData[0].status, '(tipo:', typeof rankingData[0].status, ')');
+        }
         
         // Render the ranking view
         this.campaignRankingView.render(rankingData);
