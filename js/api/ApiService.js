@@ -241,53 +241,46 @@ export class ApiService extends EventEmitter {
      */
     async toggleCampaignStatus(campaignId, newStatus) {
         console.log(`API Service - Alterando status da campanha ${campaignId} para: ${newStatus}`);
-        
         const requestPayload = {
             campaign_id: campaignId,
             status: newStatus // Novo status (ACTIVE ou PAUSED)
         };
-
         try {
             console.log('Enviando requisição para:', this.toggleStatusUrl);
             console.log('Payload:', requestPayload);
-            
             const response = await fetch(this.toggleStatusUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(requestPayload)
             });
-
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
-
             const data = await response.json();
             console.log('Resposta da API de toggle:', data);
-            
+            // Pega o status real retornado pela API
+            const statusFromApi = Array.isArray(data) && data[0] ? data[0].status : newStatus;
             // Emitir evento de sucesso
             this.emit('campaign:status_changed', {
                 campaignId,
                 success: true,
-                new_status: newStatus
+                new_status: statusFromApi
             });
-            
             return data;
         } catch (error) {
             console.error('Error toggling campaign status:', error);
-            
             // Emit error event
             this.emit('api:error', {
                 status: 'toggle_error',
                 message: 'Failed to toggle campaign status',
                 error
             });
-            
-            // Also emit status change with failure flag
+            // Emitir evento de falha
             this.emit('campaign:status_changed', {
                 campaignId,
-                success: false
+                success: false,
+                new_status: null
             });
-            
             throw error;
         }
     }

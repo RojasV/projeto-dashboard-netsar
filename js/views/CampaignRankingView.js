@@ -4,6 +4,7 @@
  */
 import { formatCurrency, formatPercentage, truncateText, generateColorPalette } from '../utils/DataHelpers.js';
 import { ApiService } from '../api/ApiService.js';
+import { ErrorHandler } from '../utils/ErrorHandler.js';
 
 export class CampaignRankingView {
     /**
@@ -18,6 +19,7 @@ export class CampaignRankingView {
         this.charts = {};
         this.dateFilter = 'last7days'; // Default date filter
         this.apiService = new ApiService(); // Add API service instance
+        this.errorHandler = new ErrorHandler(); // Toast handler
         
         // Bind event listeners for API responses
         this.apiService.on('campaign:status_changed', this.handleStatusChange.bind(this));
@@ -376,44 +378,55 @@ export class CampaignRankingView {
      */
     async toggleCampaignStatus(campaignId, newStatus) {
         const campaign = this.data.find(c => (c.id || '').toString() === campaignId.toString());
-        
-        if (campaign) {
-            console.log(`Enviando alteração de status:`, {
-                id: campaignId,
-                campaign_name: campaign.campaign_name,
-                novo_status: newStatus
-            });
-        }
-        
         const modal = document.getElementById('campaign-modal');
         if (!modal) return;
-        
-        // Encontrar o botão que foi clicado, com base no status que está sendo solicitado
         const buttonSelector = newStatus === "ACTIVE" ? '.play-btn' : '.pause-btn';
         const button = modal.querySelector(buttonSelector);
-        
         if (!button) return;
-        
-        // Mostrar estado de loading no botão
         const originalText = button.innerHTML;
         button.disabled = true;
-        button.innerHTML = `
-            <i class="fa-solid fa-spinner fa-spin mr-2"></i>
-            ${newStatus === "ACTIVE" ? 'Ativando...' : 'Desativando...'}
-        `;
-        
-        try {
-            // Chamar a API para alterar o status
-            await this.apiService.toggleCampaignStatus(campaignId, newStatus);
-            
-            // O botão será atualizado por handleStatusChange quando o evento campaign:status_changed for emitido
-        } catch (error) {
-            // Restaurar botão em caso de erro
+        button.innerHTML = `\n            <i class=\"fa-solid fa-spinner fa-spin mr-2\"></i>\n            ${newStatus === "ACTIVE" ? 'Ativando...' : 'Desativando...'}\n        `;
+
+        // Timeout de segurança
+        let timeoutId;
+        const restoreButton = (msg, type = 'error') => {
             button.disabled = false;
             button.innerHTML = originalText;
-            
-            // Exibir notificação de erro (se tiver um sistema de notificação)
-            console.error('Erro ao alterar status da campanha:', error);
+            clearTimeout(timeoutId);
+            if (msg) {
+                if (type === 'success') {
+                    this.showSuccessToast(msg);
+                } else {
+                    this.errorHandler.showErrorToast(msg);
+                }
+            }
+        };
+        timeoutId = setTimeout(() => {
+            restoreButton('A operação demorou demais. Tente novamente.', 'error');
+            this.apiService.off('campaign:status_changed', onStatusChange);
+        }, 10000);
+
+        // Handler para evento de status
+        const onStatusChange = (data) => {
+            if (data.campaignId === campaignId) {
+                restoreButton();
+                if (data.success && data.new_status) {
+                    this.showSuccessToast(
+                        data.new_status === 'ACTIVE' ? 'Campanha ativada com sucesso!' : 'Campanha pausada com sucesso!'
+                    );
+                } else {
+                    this.errorHandler.showErrorToast('Não foi possível alterar o status. Tente novamente.');
+                }
+                this.apiService.off('campaign:status_changed', onStatusChange);
+            }
+        };
+        this.apiService.on('campaign:status_changed', onStatusChange);
+
+        try {
+            await this.apiService.toggleCampaignStatus(campaignId, newStatus);
+        } catch (error) {
+            restoreButton('Não foi possível alterar o status. Tente novamente.', 'error');
+            this.apiService.off('campaign:status_changed', onStatusChange);
         }
     }
     
@@ -609,5 +622,32 @@ export class CampaignRankingView {
         if (!this.container) return;
         
         this.container.classList.remove('loading');
+    }
+
+    showSuccessToast(message) {
+        const toast = document.createElement('div');
+        toast.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded shadow-lg z-50 flex items-center';
+        toast.innerHTML = `
+            <i class="fas fa-check-circle mr-2"></i>
+            <div>
+                <p class="font-medium">Sucesso</p>
+                <p class="text-sm">${message}</p>
+            </div>
+            <button class="ml-4 text-white hover:text-gray-200">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+        document.body.appendChild(toast);
+        const closeButton = toast.querySelector('button');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                document.body.removeChild(toast);
+            });
+        }
+        setTimeout(() => {
+            if (document.body.contains(toast)) {
+                document.body.removeChild(toast);
+            }
+        }, 3000);
     }
 } 

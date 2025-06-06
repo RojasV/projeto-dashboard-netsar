@@ -1711,7 +1711,7 @@ body:not(.dark-mode) .refresh-btn.opacity-70 {
 
 .dark-mode #campaign-modal button.bg-blue-600 {
   background-color: var(--dark-blue-accent);
-  color: var(--dark-card-bg);
+  color: var(--dark-text);
 }
 
 .dark-mode #campaign-modal button.bg-blue-600:hover {
@@ -1831,3 +1831,21 @@ body:not(.dark-mode) .refresh-btn.opacity-70 {
   background-color: rgba(107, 114, 128, 0.2);
   color: rgba(107, 114, 128, 0.9);
 }
+
+/* Toast styles */
+#toast {
+  min-width: 220px;
+  max-width: 350px;
+  padding: 16px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #fff;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+  opacity: 0.95;
+  transition: opacity 0.3s;
+  display: none;
+  z-index: 9999;
+}
+#toast.success { background: #22c55e; }
+#toast.error { background: #ef4444; }
+#toast.info { background: #3b82f6; }
