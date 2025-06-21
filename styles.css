@@ -1849,3 +1849,83 @@ body:not(.dark-mode) .refresh-btn.opacity-70 {
 #toast.success { background: #22c55e; }
 #toast.error { background: #ef4444; }
 #toast.info { background: #3b82f6; }
+
+/* Remover max-width apenas do botão Nova Campanha */
+#createCampaignBtn {
+  max-width: none !important;
+}
+
+/* --- Estilos do Step Form de Criação de Campanha --- */
+
+/* Indicador de progresso */
+#stepFormProgress .step-indicator {
+  padding: 1rem 0.5rem;
+  font-weight: 500;
+  color: var(--gray-500); /* Cor base para inativos com melhor contraste */
+  position: relative;
+  border-bottom: 4px solid transparent;
+  transition: all 0.3s ease;
+}
+
+/* Indicador ativo */
+#stepFormProgress .step-indicator.active {
+  color: var(--blue-primary); /* Cor de destaque com bom contraste */
+  font-weight: 600;
+  border-bottom-color: var(--blue-primary);
+}
+
+/* Dark mode para o progresso */
+.dark-mode #stepFormProgress .step-indicator {
+  color: var(--dark-text-secondary);
+}
+
+.dark-mode #stepFormProgress .step-indicator.active {
+  color: var(--dark-blue-accent);
+  border-bottom-color: var(--dark-blue-accent);
+}
+
+/* Estilos dos campos do formulário */
+#createCampaignModal label {
+  color: var(--gray-800);
+  font-weight: 600; /* Mais destaque para as labels */
+}
+
+#createCampaignModal input,
+#createCampaignModal select,
+#createCampaignModal textarea {
+  border-color: var(--gray-300);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+#createCampaignModal input:focus,
+#createCampaignModal select:focus,
+#createCampaignModal textarea:focus {
+  border-color: var(--blue-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); /* Foco acessível */
+}
+
+/* Dark mode para os campos */
+.dark-mode #createCampaignModal label {
+  color: var(--dark-text);
+}
+
+.dark-mode #createCampaignModal input,
+.dark-mode #createCampaignModal select,
+.dark-mode #createCampaignModal textarea {
+  background-color: var(--dark-card-bg);
+  border-color: var(--dark-border);
+  color: var(--dark-text);
+}
+
+.dark-mode #createCampaignModal input:focus,
+.dark-mode #createCampaignModal select:focus,
+.dark-mode #createCampaignModal textarea:focus {
+  border-color: var(--dark-blue-accent);
+  box-shadow: 0 0 0 3px rgba(65, 147, 255, 0.2);
+}
+
+/* Botões de navegação do formulário */
+#stepFormBackBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

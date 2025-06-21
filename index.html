@@ -104,7 +104,7 @@
                 
                 <!-- Tabs for different campaign views -->
                 <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
-                    <div class="border-b border-gray-200">
+                    <div class="flex justify-between items-center border-b border-gray-200 px-4 py-2">
                         <nav class="flex" role="tablist" aria-label="Visualização de campanhas">
                             <button id="listTabBtn" class="campaign-tab-btn active px-5 py-3 font-medium border-b-2 border-indigo-500 text-indigo-600" role="tab" aria-selected="true" aria-controls="campaignListView">
                                 <i class="fas fa-list-ul mr-2" aria-hidden="true"></i>Lista
@@ -113,6 +113,9 @@
                                 <i class="fas fa-trophy mr-2" aria-hidden="true"></i>Ranking
                             </button>
                         </nav>
+                        <button id="createCampaignBtn" class="refresh-btn flex items-center bg-white text-gray-700 px-4 py-2 rounded-md border border-gray-200 hover:bg-gray-50 w-auto" aria-label="Nova Campanha">
+                            <i class="fas fa-plus mr-2"></i> Nova Campanha
+                        </button>
                     </div>
                 </div>
                 
@@ -338,6 +341,106 @@
             <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-primary mx-auto" aria-hidden="true"></div>
             <h3 class="text-xl font-semibold mt-4 mb-2">Gerando PDF</h3>
             <p class="text-gray-600">Seu relatório está sendo gerado. Por favor, aguarde...</p>
+        </div>
+    </div>
+
+    <!-- Modal de Criação de Campanha (Step Form) -->
+    <div id="createCampaignModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-xl w-[600px] max-w-[95%] p-8 relative">
+            <button id="closeCreateCampaignModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" aria-label="Fechar">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <div id="stepFormProgress" class="flex items-center mb-8">
+                <div class="step-indicator flex-1 text-center" data-step="1">1. Campanha</div>
+                <div class="step-indicator flex-1 text-center" data-step="2">2. Conjunto de Anúncios</div>
+                <div class="step-indicator flex-1 text-center" data-step="3">3. Revisão</div>
+            </div>
+            <form id="createCampaignStepForm">
+                <!-- Etapa 1: Campanha -->
+                <div class="step-form-step" data-step="1">
+                    <h3 class="text-lg font-semibold mb-4">Informações Básicas</h3>
+                    <div class="mb-4">
+                        <label class="block mb-1 font-medium">Nome da Campanha</label>
+                        <input type="text" name="campaignName" class="w-full border border-gray-300 rounded px-3 py-2" required>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-1 font-medium">Objetivo</label>
+                        <select name="campaignObjective" class="w-full border border-gray-300 rounded px-3 py-2" required>
+                            <option value="OUTCOME_TRAFFIC">Tráfego</option>
+                            <option value="OUTCOME_SALES">Vendas</option>
+                            <option value="OUTCOME_LEADS">Leads</option>
+                            <option value="OUTCOME_ENGAGEMENT">Engajamento</option>
+                            <option value="AWARENESS">Reconhecimento</option>
+                            <option value="APP_PROMOTION">Promoção de App</option>
+                        </select>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block mb-1 font-medium">Status Inicial</label>
+                        <select name="campaignStatus" class="w-full border border-gray-300 rounded px-3 py-2">
+                            <option value="ACTIVE">Ativa</option>
+                            <option value="PAUSED">Pausada</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Etapa 2: Conjunto de Anúncios -->
+                <div class="step-form-step hidden" data-step="2">
+                    <h3 class="text-lg font-semibold mb-4">Novo Conjunto de Anúncios</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block mb-1 font-medium">Nome</label>
+                            <input type="text" name="adSetName" class="w-full border border-gray-300 rounded px-3 py-2" required>
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Orçamento Diário (R$)</label>
+                            <input type="number" name="dailyBudget" class="w-full border border-gray-300 rounded px-3 py-2" required value="50">
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Data de Início</label>
+                            <input type="datetime-local" name="startTime" class="w-full border border-gray-300 rounded px-3 py-2" required>
+                        </div>
+                        <div>
+                            <label class="block mb-1 font-medium">Data de Fim</label>
+                            <input type="datetime-local" name="endTime" class="w-full border border-gray-300 rounded px-3 py-2">
+                        </div>
+                    </div>
+                    <div class="mt-4 border-t pt-4">
+                        <h4 class="font-semibold mb-2">Segmentação</h4>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block mb-1 font-medium">Idade Mínima</label>
+                                <input type="number" name="ageMin" value="18" class="w-full border border-gray-300 rounded px-3 py-2">
+                            </div>
+                            <div>
+                                <label class="block mb-1 font-medium">Idade Máxima</label>
+                                <input type="number" name="ageMax" value="55" class="w-full border border-gray-300 rounded px-3 py-2">
+                             </div>
+                         </div>
+                         <div class="mt-4">
+                            <label class="block mb-1 font-medium">Interesses</label>
+                            <select name="interests" class="w-full border border-gray-300 rounded px-3 py-2 h-32" multiple>
+                                <option value="6002898176962">Inteligência artificial (computação)</option>
+                                <option value="6003177222849">Aprendizado de máquina (computação)</option>
+                                <option value="6003985771306">Tecnologia (computadores e eletrônicos)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <!-- Etapa 3: Revisão -->
+                <div class="step-form-step hidden" data-step="3">
+                    <h3 class="text-lg font-semibold mb-4">Revisão</h3>
+                    <p>Revise os detalhes da sua campanha e conjunto de anúncios antes de finalizar.</p>
+                    <!-- O conteúdo da revisão será adicionado aqui via JS -->
+                </div>
+                <!-- Navegação -->
+                <div class="flex justify-between mt-8">
+                    <button type="button" id="stepFormBackBtn" class="bg-white text-gray-700 px-4 py-2 rounded border border-gray-300 hover:bg-gray-100 transition">Voltar</button>
+                    <div class="flex gap-2">
+                        <button type="button" id="stepFormCancelBtn" class="bg-white text-gray-700 px-4 py-2 rounded border border-gray-300 hover:bg-gray-100 transition">Cancelar</button>
+                        <button type="button" id="stepFormNextBtn" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Próximo</button>
+                        <button type="submit" id="stepFormCreateBtn" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition hidden">Criar Campanha</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 

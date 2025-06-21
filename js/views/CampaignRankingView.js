@@ -395,7 +395,7 @@ export class CampaignRankingView {
             clearTimeout(timeoutId);
             if (msg) {
                 if (type === 'success') {
-                    this.showSuccessToast(msg);
+                    this.errorHandler.showSuccessToast(msg);
                 } else {
                     this.errorHandler.showErrorToast(msg);
                 }
@@ -411,7 +411,7 @@ export class CampaignRankingView {
             if (data.campaignId === campaignId) {
                 restoreButton();
                 if (data.success && data.new_status) {
-                    this.showSuccessToast(
+                    this.errorHandler.showSuccessToast(
                         data.new_status === 'ACTIVE' ? 'Campanha ativada com sucesso!' : 'Campanha pausada com sucesso!'
                     );
                 } else {
@@ -622,32 +622,5 @@ export class CampaignRankingView {
         if (!this.container) return;
         
         this.container.classList.remove('loading');
-    }
-
-    showSuccessToast(message) {
-        const toast = document.createElement('div');
-        toast.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-3 rounded shadow-lg z-50 flex items-center';
-        toast.innerHTML = `
-            <i class="fas fa-check-circle mr-2"></i>
-            <div>
-                <p class="font-medium">Sucesso</p>
-                <p class="text-sm">${message}</p>
-            </div>
-            <button class="ml-4 text-white hover:text-gray-200">
-                <i class="fas fa-times"></i>
-            </button>
-        `;
-        document.body.appendChild(toast);
-        const closeButton = toast.querySelector('button');
-        if (closeButton) {
-            closeButton.addEventListener('click', () => {
-                document.body.removeChild(toast);
-            });
-        }
-        setTimeout(() => {
-            if (document.body.contains(toast)) {
-                document.body.removeChild(toast);
-            }
-        }, 3000);
     }
 } 
