@@ -351,9 +351,10 @@
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
             <div id="stepFormProgress" class="flex items-center mb-8">
-                <div class="step-indicator flex-1 text-center" data-step="1">1. Campanha</div>
-                <div class="step-indicator flex-1 text-center" data-step="2">2. Conjunto de Anúncios</div>
-                <div class="step-indicator flex-1 text-center" data-step="3">3. Revisão</div>
+                <div class="step-indicator flex-1 text-center cursor-pointer" data-step="1" tabindex="0">1. Campanha</div>
+                <div class="step-indicator flex-1 text-center cursor-pointer" data-step="2" tabindex="0">2. Conjunto de Anúncios</div>
+                <div class="step-indicator flex-1 text-center cursor-pointer" data-step="3" tabindex="0">3. Upload de Arquivos</div>
+                <div class="step-indicator flex-1 text-center cursor-pointer" data-step="4" tabindex="0">4. Revisão</div>
             </div>
             <form id="createCampaignStepForm">
                 <!-- Etapa 1: Campanha -->
@@ -425,11 +426,29 @@
                         </div>
                     </div>
                 </div>
-                <!-- Etapa 3: Revisão -->
+                <!-- Etapa 3: Upload de Arquivos -->
                 <div class="step-form-step hidden" data-step="3">
+                    <h3 class="text-lg font-semibold mb-4">Upload de Arquivos</h3>
+                    <div id="uploadDropArea" class="border-2 border-dashed border-gray-400 rounded-lg p-6 text-center bg-gray-50 hover:bg-gray-100 transition cursor-pointer mb-4">
+                        <p class="mb-2 text-gray-700">Arraste e solte arquivos de <b>imagem</b> ou <b>vídeo</b> aqui</p>
+                        <p class="mb-2 text-gray-500 text-sm">ou</p>
+                        <input id="uploadInput" type="file" accept="image/*,video/*" multiple class="hidden">
+                        <button type="button" id="uploadSelectBtn" class="bg-white text-gray-700 px-4 py-2 rounded border border-gray-300 hover:bg-gray-100 transition">Selecionar Arquivos</button>
+                    </div>
+                    <div id="uploadFileList" class="mb-4"></div>
+                    <div id="uploadProgress" class="mb-2 hidden">
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div id="uploadProgressBar" class="bg-blue-600 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <span id="uploadProgressText" class="text-xs text-gray-600"></span>
+                    </div>
+                    <div id="uploadError" class="text-red-600 text-sm mt-2"></div>
+                </div>
+                <!-- Etapa 4: Revisão -->
+                <div class="step-form-step hidden" data-step="4">
                     <h3 class="text-lg font-semibold mb-4">Revisão</h3>
                     <p>Revise os detalhes da sua campanha e conjunto de anúncios antes de finalizar.</p>
-                    <!-- O conteúdo da revisão será adicionado aqui via JS -->
+                    <div class="step-form-review-content mt-6"></div>
                 </div>
                 <!-- Navegação -->
                 <div class="flex justify-between mt-8">
